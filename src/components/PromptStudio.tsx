@@ -644,6 +644,10 @@ export function PromptStudio() {
                 onChange={(e) => {
                   update("anonymousFramingEnabled", e.target.checked);
                   setAnonymousOptionsTouched(false);
+                  // Activating/deactivating the module is a deliberate reset: force the prompt to
+                  // rebuild immediately (blank when turning on, full-body when turning off), even
+                  // if the user had manually edited the textarea or loaded a saved prompt before.
+                  setPromptTouched(false);
                   if (e.target.checked) setAnonymousFramingOpen(true);
                 }}
               />

@@ -126,10 +126,20 @@ const FRAMING_RULES: Record<string, FramingRule> = {
 };
 
 // Framing types whose "Objeto em foco" selection should read as "hand holding [object]" rather
-// than a looser "featuring [object]".
+// than a looser "featuring [object]" — any hand/arm-only crop, since a selected object alongside
+// one of these reads naturally as being held.
 const HAND_HOLDING_FRAMING_TYPES = new Set([
+  "close-up of a hand only, no face visible",
   "close-up of a hand holding an object, no face visible",
+  "close-up of both hands only, no face visible",
+  "close-up of a hand with painted nails, no face visible",
+  "close-up of a hand with a wristwatch, no face visible",
+  "close-up of a hand with bracelets, no face visible",
+  "close-up of a hand with rings, no face visible",
+  "close-up of a single arm only, no face visible",
+  "close-up of an arm and hand, no face visible",
   "close-up of an arm and hand holding an object, no face visible",
+  "close-up of arm, wrist and hand, no face visible",
 ]);
 
 const DEFAULT_FRAMING_RULE: FramingRule = {

@@ -50,6 +50,12 @@ describe("buildAnonymousFramingPrompt", () => {
     expect(buildAnonymousFramingPrompt(state)).toContain("holding glass");
   });
 
+  it("also phrases the focus object as 'holding X' for a plain hand-only crop", () => {
+    // handOnlyState already selects "close-up of a hand only, no face visible" + glass — a bare
+    // hand crop with an object selected should read as holding it, not "featuring" it.
+    expect(buildAnonymousFramingPrompt(handOnlyState)).toContain("holding glass");
+  });
+
   it("describes a knees-down crop without implying an upper body", () => {
     const state = {
       ...handOnlyState,
