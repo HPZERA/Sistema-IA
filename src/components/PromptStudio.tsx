@@ -7,6 +7,10 @@ import { ChipMultiSelect } from "@/components/ui/ChipMultiSelect";
 import { LibraryModules } from "@/components/library/LibraryModules";
 import {
   ACCESSORY_OPTIONS,
+  ANONYMOUS_ENVIRONMENT_OPTIONS,
+  ANONYMOUS_FOCUS_OBJECT_OPTIONS,
+  ANONYMOUS_FRAMING_TYPE_OPTIONS,
+  ANONYMOUS_PERSON_OPTIONS,
   ASPECT_RATIO_OPTIONS,
   BODY_TYPE_OPTIONS,
   CAMERA_ANGLE_OPTIONS,
@@ -30,6 +34,7 @@ import {
   WARDROBE_CATEGORY_OPTIONS,
 } from "@/types/promptOptions";
 import { faceVisibilityHidesFace } from "@/lib/faceVisibility";
+import { ANONYMOUS_FRAMING_PRESETS, AnonymousFramingPreset } from "@/lib/anonymousFraming";
 import { DEFAULT_FORM_STATE, PromptFormState, ProviderId } from "@/types/formState";
 import { buildNegativePrompt, buildPromptForProvider } from "@/lib/promptBuilder";
 import { MAX_AGE, MIN_AGE, validateSubmission } from "@/lib/safety";
@@ -97,6 +102,8 @@ export function PromptStudio() {
 
   const [libraries, setLibraries] = useState<Record<LibraryKey, LibraryModule[]>>(EMPTY_LIBRARIES);
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
+
+  const [anonymousFramingOpen, setAnonymousFramingOpen] = useState(false);
 
   async function refreshLibraries() {
     const res = await fetch("/api/libraries");
@@ -187,6 +194,7 @@ export function PromptStudio() {
           "pose (personalizada)": form.poseCustom,
           "ângulo de câmera (personalizado)": form.cameraAngleCustom,
           "expressão facial (personalizada)": form.expressionCustom,
+          "objeto em foco (personalizado)": form.anonymousFocusObjectCustom,
           "prompt editado": prompt,
           "personagem (observações)": selectedCharacter?.notes,
           "personagem (estilo)": selectedCharacter?.style,
@@ -208,7 +216,15 @@ export function PromptStudio() {
     }));
   }
 
-  type ChipField = "bodyType" | "hair" | "wardrobeCategory" | "pose" | "cameraAngle" | "expression";
+  type ChipField =
+    | "bodyType"
+    | "hair"
+    | "wardrobeCategory"
+    | "pose"
+    | "cameraAngle"
+    | "expression"
+    | "anonymousFramingType"
+    | "anonymousFocusObject";
 
   function toggleChipField(key: ChipField, value: string) {
     setForm((prev) => ({
@@ -229,6 +245,19 @@ export function PromptStudio() {
       nose: randomFrom(NOSE_OPTIONS),
       earrings: randomFrom(EARRING_OPTIONS),
     }));
+  }
+
+  function applyAnonymousFramingPreset(preset: AnonymousFramingPreset) {
+    setForm((prev) => ({
+      ...prev,
+      anonymousFramingEnabled: true,
+      anonymousFramingType: preset.framingType,
+      anonymousFocusObject: preset.focusObject,
+      anonymousFocusObjectCustom: "",
+      anonymousEnvironment: preset.environment,
+      anonymousPerson: preset.person,
+    }));
+    setAnonymousFramingOpen(true);
   }
 
   function toggleLibraryOption(libraryKey: LibraryKey, moduleId: string, optionId: string) {
@@ -532,6 +561,100 @@ export function PromptStudio() {
           <Field label="Expressão facial (personalizado)" full>
             <TextInput value={form.expressionCustom} onChange={(v) => update("expressionCustom", v)} placeholder="opcional" />
           </Field>
+        </Section>
+
+        <Section
+          title="🕶️ Enquadramento Anônimo"
+          description="Módulo dedicado a composições sem rosto: mostra apenas partes do corpo, objetos ou ângulos anônimos. Funciona junto com todos os outros módulos (Personagem, Roupas, Cenário, Pose, Câmera, Iluminação, Realismo)."
+        >
+          <div className="col-span-full flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-neutral-900/60 px-3 py-2.5">
+            <label className="flex items-center gap-2.5 text-sm text-neutral-200">
+              <input
+                type="checkbox"
+                checked={form.anonymousFramingEnabled}
+                onChange={(e) => {
+                  update("anonymousFramingEnabled", e.target.checked);
+                  if (e.target.checked) setAnonymousFramingOpen(true);
+                }}
+              />
+              <span className="font-medium">Ativar Enquadramento Anônimo</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setAnonymousFramingOpen((v) => !v)}
+              className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-2.5 py-1 text-xs text-neutral-300 hover:border-white/25"
+            >
+              {anonymousFramingOpen ? "Ocultar opções ▲" : "Configurar opções ▼"}
+            </button>
+          </div>
+
+          {form.anonymousFramingEnabled && (
+            <p className="col-span-full rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[11px] text-emerald-300">
+              Ativo: o sistema adiciona automaticamente instruções de anonimato ao prompt positivo e negativo (sem
+              rosto, olhos, contato visual, características faciais ou reflexo do rosto visíveis; identidade não
+              reconhecível).
+            </p>
+          )}
+
+          {anonymousFramingOpen && (
+            <>
+              <Field label="Pessoa">
+                <SelectField
+                  value={form.anonymousPerson}
+                  onChange={(v) => update("anonymousPerson", v)}
+                  options={ANONYMOUS_PERSON_OPTIONS}
+                />
+              </Field>
+              <Field label="Ambiente">
+                <SelectField
+                  value={form.anonymousEnvironment}
+                  onChange={(v) => update("anonymousEnvironment", v)}
+                  options={ANONYMOUS_ENVIRONMENT_OPTIONS}
+                />
+              </Field>
+
+              <Field label="Tipo de enquadramento" full hint="Selecione uma ou mais opções de composição sem rosto.">
+                <ChipMultiSelect
+                  options={ANONYMOUS_FRAMING_TYPE_OPTIONS}
+                  selected={form.anonymousFramingType}
+                  onToggle={(v) => toggleChipField("anonymousFramingType", v)}
+                />
+              </Field>
+
+              <Field label="Objeto em foco" full>
+                <ChipMultiSelect
+                  options={ANONYMOUS_FOCUS_OBJECT_OPTIONS}
+                  selected={form.anonymousFocusObject}
+                  onToggle={(v) => toggleChipField("anonymousFocusObject", v)}
+                />
+              </Field>
+              <Field label="Objeto em foco (personalizado)" full>
+                <TextInput
+                  value={form.anonymousFocusObjectCustom}
+                  onChange={(v) => update("anonymousFocusObjectCustom", v)}
+                  placeholder="ex: colar de pérolas"
+                />
+              </Field>
+
+              <div className="col-span-full flex flex-col gap-1.5 border-t border-white/10 pt-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  Exemplos prontos
+                </span>
+                <div className="flex flex-col gap-1.5">
+                  {ANONYMOUS_FRAMING_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => applyAnonymousFramingPreset(preset)}
+                      className="rounded-lg border border-white/10 bg-neutral-900/60 px-3 py-1.5 text-left text-xs text-neutral-300 hover:border-fuchsia-400/50 hover:text-neutral-100"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </Section>
 
         <Section

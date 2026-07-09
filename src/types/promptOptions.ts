@@ -240,6 +240,74 @@ export const EARRING_OPTIONS: Option[] = [
   { value: "diamond stud earrings", label: "Brilhantes" },
 ];
 
+// Enquadramento Anônimo — anonymous/faceless composition module. Values are English tokens;
+// selecting any of these framings pairs with the automatic anonymity clauses in
+// src/lib/anonymousFraming.ts (which reuses the FACE_ANONYMITY_* constants from faceVisibility.ts).
+export const ANONYMOUS_FRAMING_TYPE_OPTIONS: Option[] = [
+  { value: "photographed from behind, back to camera, face not visible", label: "Foto de costas" },
+  { value: "side framing with the face turned away, face not visible", label: "Foto lateral sem rosto" },
+  { value: "full body shot, face excluded from the frame", label: "Corpo inteiro sem rosto" },
+  { value: "framing from the neck down, head and face not visible", label: "Do pescoço para baixo" },
+  { value: "framing from the shoulders down, head and face not visible", label: "Do ombro para baixo" },
+  { value: "framing from the chest down, head and face not visible", label: "Do peito para baixo" },
+  { value: "framing from the waist down, head and face not visible", label: "Da cintura para baixo" },
+  { value: "framing from the knees down only, head and face not visible", label: "Do joelho para baixo" },
+  { value: "close-up of legs only, no head, torso or face visible", label: "Apenas pernas" },
+  { value: "close-up of feet only, no head, torso or face visible", label: "Apenas pés" },
+  { value: "close-up of a single arm only, no face visible", label: "Apenas braço" },
+  { value: "close-up of a hand only, no face visible", label: "Apenas mão" },
+  { value: "close-up of a hand holding an object, no face visible", label: "Mão segurando objeto" },
+  { value: "close-up of an arm and hand holding an object, no face visible", label: "Braço e mão segurando objeto" },
+  { value: "mirror selfie with the phone completely covering the face", label: "Selfie no espelho com rosto coberto" },
+  { value: "person inside a car, framed so the face is not visible", label: "Pessoa dentro do carro sem mostrar rosto" },
+];
+
+export const ANONYMOUS_FOCUS_OBJECT_OPTIONS: Option[] = [
+  { value: "glass", label: "Copo" },
+  { value: "wine glass", label: "Taça" },
+  { value: "cocktail drink", label: "Drink" },
+  { value: "glass of draft beer", label: "Chope" },
+  { value: "cup of coffee", label: "Café" },
+  { value: "smartphone", label: "Celular" },
+  { value: "handbag", label: "Bolsa" },
+  { value: "car key", label: "Chave de carro" },
+  { value: "car steering wheel", label: "Volante" },
+  { value: "Porsche sports car", label: "Porsche" },
+  { value: "luxury car", label: "Carro de luxo" },
+  { value: "wristwatch", label: "Relógio" },
+  { value: "fine jewelry", label: "Joias" },
+  { value: "sunglasses", label: "Óculos" },
+  { value: "perfume bottle", label: "Perfume" },
+  { value: "flower", label: "Flor" },
+  { value: "travel suitcase", label: "Mala de viagem" },
+];
+
+export const ANONYMOUS_ENVIRONMENT_OPTIONS: Option[] = [
+  { value: "beach", label: "Praia" },
+  { value: "swimming pool", label: "Piscina" },
+  { value: "bar", label: "Bar" },
+  { value: "party", label: "Festa" },
+  { value: "restaurant", label: "Restaurante" },
+  { value: "bedroom", label: "Quarto" },
+  { value: "bathroom", label: "Banheiro" },
+  { value: "in front of a large mirror", label: "Espelho" },
+  { value: "inside a car", label: "Carro" },
+  { value: "inside a Porsche", label: "Porsche" },
+  { value: "on a private yacht", label: "Yacht" },
+  { value: "hotel", label: "Hotel" },
+  { value: "luxury resort", label: "Resort" },
+  { value: "gym", label: "Academia" },
+  { value: "living room", label: "Sala" },
+  { value: "sofa", label: "Sofá" },
+];
+
+export const ANONYMOUS_PERSON_OPTIONS: Option[] = [
+  { value: "adult woman", label: "Mulher adulta" },
+  { value: "adult man", label: "Homem adulto" },
+  { value: "adult couple", label: "Casal adulto" },
+  { value: "adult group of people", label: "Grupo adulto" },
+];
+
 export const MODEL_PROVIDER_OPTIONS: Option[] = [
   { value: "flux-dev", label: "FLUX.1 [dev] — alta qualidade" },
   { value: "flux-schnell", label: "FLUX.1 [schnell] — rápido" },

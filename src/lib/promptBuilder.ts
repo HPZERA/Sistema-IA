@@ -4,6 +4,7 @@ import { PHOTOGRAPHY_STANDARD_CLAUSE, PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS } from
 import { buildLibraryEnrichment, mergeLibrarySelections } from "@/lib/libraryPrompt";
 import { buildCharacterEnrichment } from "@/lib/characterPrompt";
 import { buildFaceVisibilityNegativeTerms, buildFaceVisibilityPositiveClause } from "@/lib/faceVisibility";
+import { buildAnonymousFramingNegativeTerms, buildAnonymousFramingPositiveClause } from "@/lib/anonymousFraming";
 import { LibraryModule } from "@/types/library";
 import { CharacterProfile } from "@/types/character";
 
@@ -76,6 +77,7 @@ export function buildNaturalLanguagePrompt(
   const libraryEnrichment = libraryEnrichmentFor(state, libraries);
   const characterEnrichment = buildCharacterEnrichment(character);
   const faceVisibilityClause = buildFaceVisibilityPositiveClause(state);
+  const anonymousFramingClause = buildAnonymousFramingPositiveClause(state);
 
   const sentence = [
     `Editorial fashion photograph of a ${subject},`,
@@ -85,6 +87,7 @@ export function buildNaturalLanguagePrompt(
     `lit by ${state.lighting}, ${expression}.`,
     `${state.style}, ${state.realism}.`,
     faceVisibilityClause ? `Face visibility: ${faceVisibilityClause}.` : "",
+    anonymousFramingClause ? `Anonymous framing: ${anonymousFramingClause}.` : "",
     libraryEnrichment ? `Additional details: ${libraryEnrichment}.` : "",
     characterEnrichment ? `Character identity: ${characterEnrichment}.` : "",
     PHOTOGRAPHY_STANDARD_CLAUSE,
@@ -129,6 +132,7 @@ export function buildTagStylePrompt(
     state.style,
     state.realism,
     buildFaceVisibilityPositiveClause(state),
+    buildAnonymousFramingPositiveClause(state),
     libraryEnrichmentFor(state, libraries),
     buildCharacterEnrichment(character),
     PHOTOGRAPHY_STANDARD_CLAUSE,
@@ -153,6 +157,7 @@ export function buildNegativePrompt(state?: PromptFormState, userNegativeExtra?:
     BASE_QUALITY_NEGATIVE_TERMS,
     PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS,
     state ? buildFaceVisibilityNegativeTerms(state) : "",
+    state ? buildAnonymousFramingNegativeTerms(state) : "",
     userNegativeExtra,
   ]);
 }

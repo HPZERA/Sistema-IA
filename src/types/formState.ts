@@ -46,6 +46,15 @@ export interface PromptFormState {
   faceVisibility: string;
   faceConcealmentStrength: string; // "normal" | "strong" | "absolute"
 
+  // Enquadramento Anônimo — standalone anonymous/faceless composition module
+  // (src/lib/anonymousFraming.ts). Additive: works alongside every other module.
+  anonymousFramingEnabled: boolean;
+  anonymousFramingType: string[]; // multi-select chip values
+  anonymousFocusObject: string[]; // multi-select chip values
+  anonymousFocusObjectCustom: string;
+  anonymousEnvironment: string;
+  anonymousPerson: string;
+
   // Photographic treatment
   style: string;
   aspectRatio: string;
@@ -105,6 +114,13 @@ export const DEFAULT_FORM_STATE: PromptFormState = {
 
   faceVisibility: "face clearly visible, natural and unobstructed",
   faceConcealmentStrength: "normal",
+
+  anonymousFramingEnabled: false,
+  anonymousFramingType: [],
+  anonymousFocusObject: [],
+  anonymousFocusObjectCustom: "",
+  anonymousEnvironment: "beach",
+  anonymousPerson: "adult woman",
 
   style: "high-fashion editorial photography",
   aspectRatio: "4:5",

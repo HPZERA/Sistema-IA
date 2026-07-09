@@ -16,7 +16,7 @@ export const FACE_ANONYMITY_POSITIVE_CLAUSES = [
 ];
 
 export const FACE_ANONYMITY_NEGATIVE_TERMS =
-  "visible face, eyes, facial features, eye contact, front-facing portrait, face reflection, mirror face reflection, profile face, close-up face, visible mouth, visible nose";
+  "visible face, eyes, facial features, eye contact, front-facing portrait, face reflection, mirror face reflection, profile face, close-up face, visible mouth, visible nose, recognizable identity";
 
 function selectedFaceVisibilityOption(state: PromptFormState) {
   return FACE_VISIBILITY_OPTIONS.find((opt) => opt.value === state.faceVisibility);
