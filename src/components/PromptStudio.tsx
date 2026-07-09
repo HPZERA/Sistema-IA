@@ -388,6 +388,50 @@ export function PromptStudio() {
     await navigator.clipboard.writeText(prompt);
   }
 
+  // Shared editor fields (Prompt / Prompt negativo / Sincronizar / Copiar) reused by both the
+  // main "Prompt gerado" panel and the dedicated one inside Enquadramento Anônimo — both read
+  // and write the same `prompt`/`negativePrompt` state, there is only ever one prompt.
+  function renderPromptEditorFields() {
+    return (
+      <>
+        <Field label="Prompt" full>
+          <TextArea
+            rows={8}
+            value={prompt}
+            placeholder={
+              form.anonymousFramingEnabled && !anonymousOptionsTouched
+                ? "Enquadramento Anônimo ativo — selecione as opções do módulo (parte visível, objeto, ambiente...) para gerar o prompt."
+                : undefined
+            }
+            onChange={(v) => {
+              setPrompt(v);
+              setPromptTouched(true);
+            }}
+          />
+        </Field>
+        <Field label="Prompt negativo" full hint="Termos de segurança e qualidade são sempre incluídos.">
+          <TextArea rows={3} value={negativePrompt} onChange={setNegativePrompt} />
+        </Field>
+        <div className="col-span-full flex gap-2">
+          <button
+            type="button"
+            onClick={resyncPromptFromFields}
+            className="rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
+          >
+            Sincronizar do formulário
+          </button>
+          <button
+            type="button"
+            onClick={copyPrompt}
+            className="rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
+          >
+            Copiar prompt
+          </button>
+        </div>
+      </>
+    );
+  }
+
   useEffect(() => {
     if (!pendingAutoGenerate) return;
     setPendingAutoGenerate(false);
@@ -753,6 +797,15 @@ export function PromptStudio() {
           )}
         </Section>
 
+        {form.anonymousFramingEnabled && (
+          <Section
+            title="🕶️ Prompt Gerado — Enquadramento Anônimo"
+            description="Prompt exclusivo deste módulo: construído somente com pessoa, parte visível, objeto em foco, ambiente, detalhes de mão/braço, câmera, iluminação e estilo selecionados acima. Nenhum dado de personagem, roupa, cenário ou pose padrão entra aqui."
+          >
+            {renderPromptEditorFields()}
+          </Section>
+        )}
+
         <Section
           title="Visibilidade do Rosto"
           description="Define se e como o rosto aparece na imagem. Ao escolher uma opção 'sem rosto', o sistema adiciona automaticamente instruções de anonimato ao prompt final (positivo e negativo)."
@@ -798,45 +851,22 @@ export function PromptStudio() {
       </div>
 
       <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
-        <Section
-          title="Prompt gerado"
-          description="Editável antes da geração. O padrão fotográfico (realismo, corpo visível em quadro, textura de pele natural, sem marca d'água) é sempre aplicado automaticamente ao final do prompt."
-        >
-          <Field label="Prompt" full>
-            <TextArea
-              rows={8}
-              value={prompt}
-              placeholder={
-                form.anonymousFramingEnabled && !anonymousOptionsTouched
-                  ? "Enquadramento Anônimo ativo — selecione as opções do módulo (parte visível, objeto, ambiente...) para gerar o prompt."
-                  : undefined
-              }
-              onChange={(v) => {
-                setPrompt(v);
-                setPromptTouched(true);
-              }}
-            />
-          </Field>
-          <Field label="Prompt negativo" full hint="Termos de segurança e qualidade são sempre incluídos.">
-            <TextArea rows={3} value={negativePrompt} onChange={setNegativePrompt} />
-          </Field>
-          <div className="col-span-full flex gap-2">
-            <button
-              type="button"
-              onClick={resyncPromptFromFields}
-              className="rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
-            >
-              Sincronizar do formulário
-            </button>
-            <button
-              type="button"
-              onClick={copyPrompt}
-              className="rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
-            >
-              Copiar prompt
-            </button>
-          </div>
-        </Section>
+        {form.anonymousFramingEnabled ? (
+          <Section title="Prompt gerado">
+            <p className="col-span-full text-xs text-neutral-400">
+              Enquadramento Anônimo ativo — edite o prompt na aba{" "}
+              <strong className="text-neutral-200">🕶️ Prompt Gerado — Enquadramento Anônimo</strong>, logo acima do
+              módulo, na coluna principal.
+            </p>
+          </Section>
+        ) : (
+          <Section
+            title="Prompt gerado"
+            description="Editável antes da geração. O padrão fotográfico (realismo, corpo visível em quadro, textura de pele natural, sem marca d'água) é sempre aplicado automaticamente ao final do prompt."
+          >
+            {renderPromptEditorFields()}
+          </Section>
+        )}
 
         <Section title="Política de conteúdo">
           <label className="col-span-full flex items-start gap-2.5 text-xs text-neutral-300">
