@@ -54,6 +54,9 @@ export interface PromptFormState {
   anonymousFocusObjectCustom: string;
   anonymousEnvironment: string;
   anonymousPerson: string;
+  anonymousHandDetails: string[]; // multi-select chip values — nails, jewelry, skin tone/texture
+  anonymousHandDetailsCustom: string;
+  anonymousCustomDescription: string; // free text, appended to the anonymous framing sentence
 
   // Photographic treatment
   style: string;
@@ -121,6 +124,9 @@ export const DEFAULT_FORM_STATE: PromptFormState = {
   anonymousFocusObjectCustom: "",
   anonymousEnvironment: "beach",
   anonymousPerson: "adult woman",
+  anonymousHandDetails: [],
+  anonymousHandDetailsCustom: "",
+  anonymousCustomDescription: "",
 
   style: "high-fashion editorial photography",
   aspectRatio: "4:5",

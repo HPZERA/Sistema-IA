@@ -256,8 +256,17 @@ export const ANONYMOUS_FRAMING_TYPE_OPTIONS: Option[] = [
   { value: "close-up of feet only, no head, torso or face visible", label: "Apenas pés" },
   { value: "close-up of a single arm only, no face visible", label: "Apenas braço" },
   { value: "close-up of a hand only, no face visible", label: "Apenas mão" },
+  { value: "close-up of both hands only, no face visible", label: "Apenas mãos" },
   { value: "close-up of a hand holding an object, no face visible", label: "Mão segurando objeto" },
+  { value: "close-up of an arm and hand, no face visible", label: "Braço e mão" },
   { value: "close-up of an arm and hand holding an object, no face visible", label: "Braço e mão segurando objeto" },
+  { value: "close-up of arm, wrist and hand, no face visible", label: "Braço, pulso e mão" },
+  { value: "close-up of a hand with painted nails, no face visible", label: "Mão com unhas pintadas" },
+  { value: "close-up of a hand with a wristwatch, no face visible", label: "Mão com relógio" },
+  { value: "close-up of a hand with bracelets, no face visible", label: "Mão com pulseiras" },
+  { value: "close-up of a hand with rings, no face visible", label: "Mão com anéis" },
+  { value: "close-up of feet in the sand, no head, torso or face visible", label: "Pés na areia" },
+  { value: "silhouette shot, face not visible", label: "Silhueta sem rosto" },
   { value: "mirror selfie with the phone completely covering the face", label: "Selfie no espelho com rosto coberto" },
   { value: "person inside a car, framed so the face is not visible", label: "Pessoa dentro do carro sem mostrar rosto" },
 ];
@@ -267,11 +276,14 @@ export const ANONYMOUS_FOCUS_OBJECT_OPTIONS: Option[] = [
   { value: "wine glass", label: "Taça" },
   { value: "cocktail drink", label: "Drink" },
   { value: "glass of draft beer", label: "Chope" },
+  { value: "glass of beer", label: "Cerveja" },
   { value: "cup of coffee", label: "Café" },
   { value: "smartphone", label: "Celular" },
   { value: "handbag", label: "Bolsa" },
   { value: "car key", label: "Chave de carro" },
+  { value: "Porsche car key", label: "Chave de Porsche" },
   { value: "car steering wheel", label: "Volante" },
+  { value: "credit card", label: "Cartão" },
   { value: "Porsche sports car", label: "Porsche" },
   { value: "luxury car", label: "Carro de luxo" },
   { value: "wristwatch", label: "Relógio" },
@@ -293,12 +305,17 @@ export const ANONYMOUS_ENVIRONMENT_OPTIONS: Option[] = [
   { value: "in front of a large mirror", label: "Espelho" },
   { value: "inside a car", label: "Carro" },
   { value: "inside a Porsche", label: "Porsche" },
+  { value: "behind the wheel of a Porsche", label: "Volante de Porsche" },
+  { value: "luxury car in the background", label: "Carro de luxo ao fundo" },
   { value: "on a private yacht", label: "Yacht" },
   { value: "hotel", label: "Hotel" },
   { value: "luxury resort", label: "Resort" },
   { value: "gym", label: "Academia" },
   { value: "living room", label: "Sala" },
   { value: "sofa", label: "Sofá" },
+  { value: "balcony", label: "Varanda" },
+  { value: "street", label: "Rua" },
+  { value: "park", label: "Parque" },
 ];
 
 export const ANONYMOUS_PERSON_OPTIONS: Option[] = [
@@ -306,6 +323,22 @@ export const ANONYMOUS_PERSON_OPTIONS: Option[] = [
   { value: "adult man", label: "Homem adulto" },
   { value: "adult couple", label: "Casal adulto" },
   { value: "adult group of people", label: "Grupo adulto" },
+];
+
+// Hand/arm micro-details — additive to whichever "Tipo de enquadramento" is selected, only ever
+// contributed to the prompt when explicitly chosen (src/lib/anonymousFraming.ts).
+export const ANONYMOUS_HAND_DETAIL_OPTIONS: Option[] = [
+  { value: "painted nails", label: "Unhas pintadas" },
+  { value: "natural nails", label: "Unhas naturais" },
+  { value: "wristwatch", label: "Relógio" },
+  { value: "bracelets", label: "Pulseiras" },
+  { value: "rings", label: "Anéis" },
+  { value: "tanned skin", label: "Pele bronzeada" },
+  { value: "fair skin", label: "Pele clara" },
+  { value: "small skin marks", label: "Pequenas marcas na pele" },
+  { value: "subtle veins", label: "Veias sutis" },
+  { value: "realistic skin texture", label: "Textura realista" },
+  { value: "natural light on skin", label: "Luz natural na pele" },
 ];
 
 export const MODEL_PROVIDER_OPTIONS: Option[] = [

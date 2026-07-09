@@ -10,6 +10,7 @@ import {
   ANONYMOUS_ENVIRONMENT_OPTIONS,
   ANONYMOUS_FOCUS_OBJECT_OPTIONS,
   ANONYMOUS_FRAMING_TYPE_OPTIONS,
+  ANONYMOUS_HAND_DETAIL_OPTIONS,
   ANONYMOUS_PERSON_OPTIONS,
   ASPECT_RATIO_OPTIONS,
   BODY_TYPE_OPTIONS,
@@ -195,6 +196,8 @@ export function PromptStudio() {
           "ângulo de câmera (personalizado)": form.cameraAngleCustom,
           "expressão facial (personalizada)": form.expressionCustom,
           "objeto em foco (personalizado)": form.anonymousFocusObjectCustom,
+          "detalhes da mão/braço (personalizado)": form.anonymousHandDetailsCustom,
+          "enquadramento anônimo (descrição personalizada)": form.anonymousCustomDescription,
           "prompt editado": prompt,
           "personagem (observações)": selectedCharacter?.notes,
           "personagem (estilo)": selectedCharacter?.style,
@@ -224,7 +227,8 @@ export function PromptStudio() {
     | "cameraAngle"
     | "expression"
     | "anonymousFramingType"
-    | "anonymousFocusObject";
+    | "anonymousFocusObject"
+    | "anonymousHandDetails";
 
   function toggleChipField(key: ChipField, value: string) {
     setForm((prev) => ({
@@ -565,7 +569,7 @@ export function PromptStudio() {
 
         <Section
           title="🕶️ Enquadramento Anônimo"
-          description="Módulo dedicado a composições sem rosto: mostra apenas partes do corpo, objetos ou ângulos anônimos. Funciona junto com todos os outros módulos (Personagem, Roupas, Cenário, Pose, Câmera, Iluminação, Realismo)."
+          description="Módulo dedicado a composições sem rosto: mostra apenas partes do corpo, objetos ou ângulos anônimos. Quando ativo, ele tem prioridade sobre o enquadramento padrão de corpo inteiro (Roupas e Pose deixam de aparecer no prompt), mas continua respeitando Câmera, Iluminação e Realismo."
         >
           <div className="col-span-full flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-neutral-900/60 px-3 py-2.5">
             <label className="flex items-center gap-2.5 text-sm text-neutral-200">
@@ -633,6 +637,28 @@ export function PromptStudio() {
                   value={form.anonymousFocusObjectCustom}
                   onChange={(v) => update("anonymousFocusObjectCustom", v)}
                   placeholder="ex: colar de pérolas"
+                />
+              </Field>
+
+              <Field label="Detalhes da mão/braço" full hint="Só entram no prompt se selecionados aqui.">
+                <ChipMultiSelect
+                  options={ANONYMOUS_HAND_DETAIL_OPTIONS}
+                  selected={form.anonymousHandDetails}
+                  onToggle={(v) => toggleChipField("anonymousHandDetails", v)}
+                />
+              </Field>
+              <Field label="Detalhes da mão/braço (personalizado)" full>
+                <TextInput
+                  value={form.anonymousHandDetailsCustom}
+                  onChange={(v) => update("anonymousHandDetailsCustom", v)}
+                  placeholder="ex: aliança de casamento"
+                />
+              </Field>
+              <Field label="Descrição personalizada" full>
+                <TextArea
+                  value={form.anonymousCustomDescription}
+                  onChange={(v) => update("anonymousCustomDescription", v)}
+                  placeholder="opcional: detalhes extras adicionados ao final do enquadramento anônimo"
                 />
               </Field>
 
