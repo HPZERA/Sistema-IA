@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local AI provider store — contains API keys, never commit
+/.data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+
+.env*
