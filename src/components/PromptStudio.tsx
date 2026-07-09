@@ -282,6 +282,16 @@ export function PromptStudio() {
     if (key === "anonymousFramingType" || key === "anonymousFocusObject" || key === "anonymousHandDetails") {
       setAnonymousOptionsTouched(true);
     }
+    // "Tipo de enquadramento" is exclusive: clicking a crop marks only that one, instead of
+    // accumulating previously-clicked crops (which produced contradictory prompts, e.g. "only
+    // hand visible" + "photographed from behind" at once).
+    if (key === "anonymousFramingType") {
+      setForm((prev) => ({
+        ...prev,
+        anonymousFramingType: prev.anonymousFramingType.includes(value) ? [] : [value],
+      }));
+      return;
+    }
     setForm((prev) => ({
       ...prev,
       [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value],
@@ -673,7 +683,7 @@ export function PromptStudio() {
                 />
               </Field>
 
-              <Field label="Tipo de enquadramento" full hint="Selecione uma ou mais opções de composição sem rosto.">
+              <Field label="Tipo de enquadramento" full hint="Selecione uma opção de composição sem rosto — clicar em outra troca a seleção.">
                 <ChipMultiSelect
                   options={ANONYMOUS_FRAMING_TYPE_OPTIONS}
                   selected={form.anonymousFramingType}
