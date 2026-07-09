@@ -177,6 +177,69 @@ export const REALISM_OPTIONS: Option[] = [
   { value: "semi-stylized realism with soft painterly rendering", label: "Semi-estilizado" },
 ];
 
+// `hidesFace: true` marks framings where the face must not be visible at all — selecting one of
+// these auto-enriches the final prompt with the anonymity clauses from src/lib/faceVisibility.ts.
+export type FaceVisibilityOption = Option & { hidesFace: boolean };
+
+export const FACE_VISIBILITY_OPTIONS: FaceVisibilityOption[] = [
+  { value: "face clearly visible, natural and unobstructed", label: "Rosto visível", hidesFace: false },
+  { value: "face partially visible, naturally obstructed by hair, angle or object", label: "Rosto parcialmente visível", hidesFace: false },
+  { value: "face fully covered by hair, no facial features visible", label: "Rosto coberto pelo cabelo", hidesFace: true },
+  { value: "mirror selfie with the phone completely covering the face", label: "Rosto coberto pelo celular", hidesFace: true },
+  { value: "photographed exclusively from behind, back to camera, face not visible", label: "Foto de costas", hidesFace: true },
+  { value: "side framing with the face turned away or hidden by hair, face not visible", label: "Foto de lado sem mostrar o rosto", hidesFace: true },
+  { value: "framing deliberately excludes the face from the shot", label: "Enquadramento sem rosto", hidesFace: true },
+  { value: "body-only framing, head and face outside the frame", label: "Somente corpo", hidesFace: true },
+  { value: "close-up of hands only, no body or face visible", label: "Somente mãos", hidesFace: true },
+  { value: "close-up of legs only, no body or face visible", label: "Somente pernas", hidesFace: true },
+  { value: "framing from the knees down only, no head, torso or face visible", label: "Do joelho para baixo", hidesFace: true },
+  { value: "anonymous silhouette, face not visible", label: "Silhueta sem rosto", hidesFace: true },
+  { value: "face positioned entirely outside the frame boundary", label: "Rosto fora do enquadramento", hidesFace: true },
+];
+
+export const FACE_CONCEALMENT_STRENGTH_OPTIONS: Option[] = [
+  { value: "normal", label: "Normal" },
+  { value: "strong", label: "Forte" },
+  { value: "absolute", label: "Absoluta" },
+];
+
+export const FACE_SHAPE_OPTIONS: Option[] = [
+  { value: "oval face shape", label: "Oval" },
+  { value: "round face shape", label: "Redondo" },
+  { value: "square face shape with a defined jawline", label: "Quadrado" },
+  { value: "heart-shaped face with a narrow chin", label: "Coração" },
+  { value: "diamond-shaped face with high cheekbones", label: "Diamante" },
+  { value: "elongated oblong face shape", label: "Alongado" },
+  { value: "soft rounded heart-shaped face", label: "Coração suave" },
+];
+
+export const LIPS_OPTIONS: Option[] = [
+  { value: "natural thin lips", label: "Naturais finos" },
+  { value: "natural medium-full lips", label: "Naturais médios" },
+  { value: "natural full lips", label: "Naturais cheios" },
+  { value: "lips with a subtle filler look, slightly plumped", label: "Preenchimento sutil" },
+  { value: "voluminous lips with an evident filler look", label: "Preenchimento evidente" },
+];
+
+export const NOSE_OPTIONS: Option[] = [
+  { value: "straight refined nose", label: "Reto" },
+  { value: "small button nose", label: "Arrebitado" },
+  { value: "aquiline nose with a defined bridge", label: "Aquilino" },
+  { value: "narrow slender nose", label: "Fino" },
+  { value: "wide nose with rounded tip", label: "Largo" },
+  { value: "slightly upturned nose", label: "Levemente arrebitado" },
+];
+
+export const EARRING_OPTIONS: Option[] = [
+  { value: "no earrings", label: "Sem brincos" },
+  { value: "small delicate stud earrings", label: "Pontos pequenos" },
+  { value: "thin gold hoop earrings", label: "Argolas finas" },
+  { value: "large statement hoop earrings", label: "Argolas grandes" },
+  { value: "elegant dangling drop earrings", label: "Pendentes" },
+  { value: "classic pearl earrings", label: "Pérolas" },
+  { value: "diamond stud earrings", label: "Brilhantes" },
+];
+
 export const MODEL_PROVIDER_OPTIONS: Option[] = [
   { value: "flux-dev", label: "FLUX.1 [dev] — alta qualidade" },
   { value: "flux-schnell", label: "FLUX.1 [schnell] — rápido" },

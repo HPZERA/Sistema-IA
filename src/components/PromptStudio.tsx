@@ -10,9 +10,15 @@ import {
   ASPECT_RATIO_OPTIONS,
   BODY_TYPE_OPTIONS,
   CAMERA_ANGLE_OPTIONS,
+  EARRING_OPTIONS,
   EXPRESSION_OPTIONS,
+  FACE_CONCEALMENT_STRENGTH_OPTIONS,
+  FACE_SHAPE_OPTIONS,
+  FACE_VISIBILITY_OPTIONS,
   GENDER_OPTIONS,
   HAIR_OPTIONS,
+  LIPS_OPTIONS,
+  NOSE_OPTIONS,
   LENS_OPTIONS,
   LIGHTING_OPTIONS,
   MODEL_PROVIDER_OPTIONS,
@@ -23,6 +29,7 @@ import {
   STYLE_OPTIONS,
   WARDROBE_CATEGORY_OPTIONS,
 } from "@/types/promptOptions";
+import { faceVisibilityHidesFace } from "@/lib/faceVisibility";
 import { DEFAULT_FORM_STATE, PromptFormState, ProviderId } from "@/types/formState";
 import { buildNegativePrompt, buildPromptForProvider } from "@/lib/promptBuilder";
 import { MAX_AGE, MIN_AGE, validateSubmission } from "@/lib/safety";
@@ -74,7 +81,7 @@ const EMPTY_LIBRARIES: Record<LibraryKey, LibraryModule[]> = {
 export function PromptStudio() {
   const [form, setForm] = useState<PromptFormState>(DEFAULT_FORM_STATE);
   const [prompt, setPrompt] = useState(() => buildPromptForProvider(DEFAULT_FORM_STATE));
-  const [negativePrompt, setNegativePrompt] = useState(() => buildNegativePrompt());
+  const [negativePrompt, setNegativePrompt] = useState(() => buildNegativePrompt(DEFAULT_FORM_STATE));
   const [promptTouched, setPromptTouched] = useState(false);
 
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -170,11 +177,16 @@ export function PromptStudio() {
         age: Number(form.age),
         consentAccepted: form.consentAccepted,
         freeTextFields: {
+          "tipo de corpo (personalizado)": form.bodyTypeCustom,
+          "cabelo (personalizado)": form.hairCustom,
           "características físicas": form.distinguishingFeatures,
+          "categoria da roupa (personalizada)": form.wardrobeCategoryCustom,
           "detalhes da roupa": form.wardrobeDetails,
           "acessórios (personalizado)": form.accessoriesCustom,
           "detalhes do cenário": form.sceneDetails,
           "pose (personalizada)": form.poseCustom,
+          "ângulo de câmera (personalizado)": form.cameraAngleCustom,
+          "expressão facial (personalizada)": form.expressionCustom,
           "prompt editado": prompt,
           "personagem (observações)": selectedCharacter?.notes,
           "personagem (estilo)": selectedCharacter?.style,
@@ -196,12 +208,26 @@ export function PromptStudio() {
     }));
   }
 
-  type ChipField = "hair" | "wardrobeCategory" | "pose" | "cameraAngle" | "expression";
+  type ChipField = "bodyType" | "hair" | "wardrobeCategory" | "pose" | "cameraAngle" | "expression";
 
   function toggleChipField(key: ChipField, value: string) {
     setForm((prev) => ({
       ...prev,
       [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value],
+    }));
+  }
+
+  function randomFrom<T extends { value: string }>(options: T[]): string {
+    return options[Math.floor(Math.random() * options.length)].value;
+  }
+
+  function randomizeFace() {
+    setForm((prev) => ({
+      ...prev,
+      faceShape: randomFrom(FACE_SHAPE_OPTIONS),
+      lips: randomFrom(LIPS_OPTIONS),
+      nose: randomFrom(NOSE_OPTIONS),
+      earrings: randomFrom(EARRING_OPTIONS),
     }));
   }
 
@@ -221,7 +247,7 @@ export function PromptStudio() {
 
   function resyncPromptFromFields() {
     setPrompt(buildPromptForProvider(form, allLibraryModules, selectedCharacter));
-    setNegativePrompt(buildNegativePrompt());
+    setNegativePrompt(buildNegativePrompt(form));
     setPromptTouched(false);
   }
 
@@ -274,7 +300,7 @@ export function PromptStudio() {
     setForm(formSnapshot);
     const templateCharacter = characters.find((c) => c.id === formSnapshot.selectedCharacterId) ?? undefined;
     setPrompt(buildPromptForProvider(formSnapshot, allLibraryModules, templateCharacter));
-    setNegativePrompt(buildNegativePrompt());
+    setNegativePrompt(buildNegativePrompt(formSnapshot));
     setPromptTouched(false);
   }
 
@@ -359,8 +385,11 @@ export function PromptStudio() {
           <Field label="Gênero">
             <SelectField value={form.gender} onChange={(v) => update("gender", v)} options={GENDER_OPTIONS} />
           </Field>
-          <Field label="Tipo de corpo">
-            <SelectField value={form.bodyType} onChange={(v) => update("bodyType", v)} options={BODY_TYPE_OPTIONS} />
+          <Field label="Tipo de corpo" full>
+            <ChipMultiSelect options={BODY_TYPE_OPTIONS} selected={form.bodyType} onToggle={(v) => toggleChipField("bodyType", v)} />
+          </Field>
+          <Field label="Tipo de corpo (personalizado)" full hint="Ex: cintura fina, quadril largo, abdômen definido. Sem conteúdo sexual ou de menores.">
+            <TextInput value={form.bodyTypeCustom} onChange={(v) => update("bodyTypeCustom", v)} placeholder="opcional" />
           </Field>
           <Field label="Tom de pele">
             <SelectField value={form.skinTone} onChange={(v) => update("skinTone", v)} options={SKIN_TONE_OPTIONS} />
@@ -377,6 +406,29 @@ export function PromptStudio() {
               onChange={(v) => update("distinguishingFeatures", v)}
               placeholder="opcional"
             />
+          </Field>
+
+          <div className="col-span-full flex items-center justify-between border-t border-white/10 pt-3">
+            <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Rosto</span>
+            <button
+              type="button"
+              onClick={randomizeFace}
+              className="rounded-lg border border-white/10 bg-neutral-900/70 px-2.5 py-1 text-xs text-neutral-300 hover:border-white/25"
+            >
+              🎲 Gerar rosto aleatório
+            </button>
+          </div>
+          <Field label="Formato do rosto">
+            <SelectField value={form.faceShape} onChange={(v) => update("faceShape", v)} options={FACE_SHAPE_OPTIONS} />
+          </Field>
+          <Field label="Lábios" hint="Natural ou com aspecto de preenchimento.">
+            <SelectField value={form.lips} onChange={(v) => update("lips", v)} options={LIPS_OPTIONS} />
+          </Field>
+          <Field label="Nariz">
+            <SelectField value={form.nose} onChange={(v) => update("nose", v)} options={NOSE_OPTIONS} />
+          </Field>
+          <Field label="Brincos">
+            <SelectField value={form.earrings} onChange={(v) => update("earrings", v)} options={EARRING_OPTIONS} />
           </Field>
         </Section>
 
@@ -479,6 +531,33 @@ export function PromptStudio() {
           </Field>
           <Field label="Expressão facial (personalizado)" full>
             <TextInput value={form.expressionCustom} onChange={(v) => update("expressionCustom", v)} placeholder="opcional" />
+          </Field>
+        </Section>
+
+        <Section
+          title="Visibilidade do Rosto"
+          description="Define se e como o rosto aparece na imagem. Ao escolher uma opção 'sem rosto', o sistema adiciona automaticamente instruções de anonimato ao prompt final (positivo e negativo)."
+        >
+          <Field label="Enquadramento" full>
+            <SelectField
+              value={form.faceVisibility}
+              onChange={(v) => update("faceVisibility", v)}
+              options={FACE_VISIBILITY_OPTIONS}
+            />
+          </Field>
+          <Field
+            label="Força da ocultação do rosto"
+            hint={
+              faceVisibilityHidesFace(form)
+                ? "Em 'Absoluta', as instruções de anonimato são repetidas no prompt positivo e no negativo para reforço máximo."
+                : "Só se aplica quando o enquadramento escolhido acima esconde o rosto."
+            }
+          >
+            <SelectField
+              value={form.faceConcealmentStrength}
+              onChange={(v) => update("faceConcealmentStrength", v)}
+              options={FACE_CONCEALMENT_STRENGTH_OPTIONS}
+            />
           </Field>
         </Section>
 

@@ -34,11 +34,16 @@ export async function POST(request: Request) {
     age: Number(form.age),
     consentAccepted: !!form.consentAccepted,
     freeTextFields: {
+      "tipo de corpo (personalizado)": form.bodyTypeCustom,
+      "cabelo (personalizado)": form.hairCustom,
       "características físicas": form.distinguishingFeatures,
+      "categoria da roupa (personalizada)": form.wardrobeCategoryCustom,
       "detalhes da roupa": form.wardrobeDetails,
       "acessórios (personalizado)": form.accessoriesCustom,
       "detalhes do cenário": form.sceneDetails,
       "pose (personalizada)": form.poseCustom,
+      "ângulo de câmera (personalizado)": form.cameraAngleCustom,
+      "expressão facial (personalizada)": form.expressionCustom,
       "prompt editado manualmente": promptOverride,
       // Note: the negative prompt is intentionally NOT scanned here — it's a "what to avoid"
       // list that always includes MANDATORY_SAFETY_NEGATIVE_TERMS (e.g. "child, minor,
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
     const character = form.selectedCharacterId ? await getCharacterWithImages(form.selectedCharacterId) : undefined;
     prompt = buildPromptForProvider(form, libraries, character);
   }
-  const negativePrompt = negativePromptOverride?.trim() || buildNegativePrompt();
+  const negativePrompt = negativePromptOverride?.trim() || buildNegativePrompt(form);
   const { width, height } = aspectRatioToSize(form.aspectRatio);
 
   const cacheKey = computeCacheKey({

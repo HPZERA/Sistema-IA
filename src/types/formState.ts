@@ -6,11 +6,18 @@ export interface PromptFormState {
   // Subject
   age: number;
   gender: string;
-  bodyType: string;
+  bodyType: string[]; // multi-select chip values
+  bodyTypeCustom: string;
   skinTone: string;
   hair: string[]; // multi-select chip values
   hairCustom: string;
   distinguishingFeatures: string; // free text, sanitized
+
+  // Face details
+  faceShape: string;
+  lips: string;
+  nose: string;
+  earrings: string;
 
   // Wardrobe
   wardrobeCategory: string[]; // multi-select chip values
@@ -34,6 +41,10 @@ export interface PromptFormState {
   lighting: string;
   expression: string[]; // multi-select chip values
   expressionCustom: string;
+
+  // Face visibility — controls whether/how the face appears (src/lib/faceVisibility.ts)
+  faceVisibility: string;
+  faceConcealmentStrength: string; // "normal" | "strong" | "absolute"
 
   // Photographic treatment
   style: string;
@@ -61,11 +72,17 @@ export interface PromptFormState {
 export const DEFAULT_FORM_STATE: PromptFormState = {
   age: 28,
   gender: "woman",
-  bodyType: "athletic muscular build",
+  bodyType: ["athletic muscular build"],
+  bodyTypeCustom: "",
   skinTone: "tan skin tone",
   hair: ["long wavy blonde hair"],
   hairCustom: "",
   distinguishingFeatures: "",
+
+  faceShape: "oval face shape",
+  lips: "natural medium-full lips",
+  nose: "straight refined nose",
+  earrings: "no earrings",
 
   wardrobeCategory: ["fitted two-piece bikini"],
   wardrobeCategoryCustom: "",
@@ -85,6 +102,9 @@ export const DEFAULT_FORM_STATE: PromptFormState = {
   lighting: "warm golden hour sunlight",
   expression: ["relaxed genuine smile"],
   expressionCustom: "",
+
+  faceVisibility: "face clearly visible, natural and unobstructed",
+  faceConcealmentStrength: "normal",
 
   style: "high-fashion editorial photography",
   aspectRatio: "4:5",

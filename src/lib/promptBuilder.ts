@@ -3,6 +3,7 @@ import { BASE_QUALITY_NEGATIVE_TERMS, MANDATORY_SAFETY_NEGATIVE_TERMS } from "@/
 import { PHOTOGRAPHY_STANDARD_CLAUSE, PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS } from "@/lib/photographyStandard";
 import { buildLibraryEnrichment, mergeLibrarySelections } from "@/lib/libraryPrompt";
 import { buildCharacterEnrichment } from "@/lib/characterPrompt";
+import { buildFaceVisibilityNegativeTerms, buildFaceVisibilityPositiveClause } from "@/lib/faceVisibility";
 import { LibraryModule } from "@/types/library";
 import { CharacterProfile } from "@/types/character";
 
@@ -44,6 +45,7 @@ export function buildNaturalLanguagePrompt(
   libraries: LibraryModule[] = [],
   character?: CharacterProfile
 ): string {
+  const bodyType = joinSelectionWithCustom(state.bodyType, state.bodyTypeCustom);
   const hair = joinSelectionWithCustom(state.hair, state.hairCustom);
   const wardrobeCategory = joinSelectionWithCustom(state.wardrobeCategory, state.wardrobeCategoryCustom);
   const pose = joinSelectionWithCustom(state.pose, state.poseCustom);
@@ -53,9 +55,13 @@ export function buildNaturalLanguagePrompt(
   const subject = joinNonEmpty([
     ageDescriptor(state.age),
     state.gender,
-    state.bodyType,
+    bodyType,
     state.skinTone,
     hair,
+    state.faceShape,
+    state.lips,
+    state.nose,
+    state.earrings,
     state.distinguishingFeatures,
   ]);
 
@@ -69,6 +75,7 @@ export function buildNaturalLanguagePrompt(
   const scene = joinNonEmpty([state.scene, state.sceneDetails]);
   const libraryEnrichment = libraryEnrichmentFor(state, libraries);
   const characterEnrichment = buildCharacterEnrichment(character);
+  const faceVisibilityClause = buildFaceVisibilityPositiveClause(state);
 
   const sentence = [
     `Editorial fashion photograph of a ${subject},`,
@@ -77,6 +84,7 @@ export function buildNaturalLanguagePrompt(
     `Shot at ${cameraAngle} with a ${state.lens},`,
     `lit by ${state.lighting}, ${expression}.`,
     `${state.style}, ${state.realism}.`,
+    faceVisibilityClause ? `Face visibility: ${faceVisibilityClause}.` : "",
     libraryEnrichment ? `Additional details: ${libraryEnrichment}.` : "",
     characterEnrichment ? `Character identity: ${characterEnrichment}.` : "",
     PHOTOGRAPHY_STANDARD_CLAUSE,
@@ -94,10 +102,15 @@ export function buildTagStylePrompt(
   const tags = [
     ageDescriptor(state.age),
     state.gender,
-    state.bodyType,
+    ...state.bodyType,
+    state.bodyTypeCustom,
     state.skinTone,
     ...state.hair,
     state.hairCustom,
+    state.faceShape,
+    state.lips,
+    state.nose,
+    state.earrings,
     state.distinguishingFeatures,
     `wearing ${joinSelectionWithCustom(state.wardrobeCategory, state.wardrobeCategoryCustom)}`,
     state.wardrobeDetails,
@@ -115,6 +128,7 @@ export function buildTagStylePrompt(
     state.expressionCustom,
     state.style,
     state.realism,
+    buildFaceVisibilityPositiveClause(state),
     libraryEnrichmentFor(state, libraries),
     buildCharacterEnrichment(character),
     PHOTOGRAPHY_STANDARD_CLAUSE,
@@ -133,11 +147,12 @@ export function buildPromptForProvider(
   return buildNaturalLanguagePrompt(state, libraries, character);
 }
 
-export function buildNegativePrompt(userNegativeExtra?: string): string {
+export function buildNegativePrompt(state?: PromptFormState, userNegativeExtra?: string): string {
   return joinNonEmpty([
     MANDATORY_SAFETY_NEGATIVE_TERMS,
     BASE_QUALITY_NEGATIVE_TERMS,
     PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS,
+    state ? buildFaceVisibilityNegativeTerms(state) : "",
     userNegativeExtra,
   ]);
 }
