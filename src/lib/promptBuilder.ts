@@ -16,6 +16,13 @@ function joinNonEmpty(parts: (string | undefined | null)[], sep = ", "): string 
   return parts.map((p) => p?.trim()).filter(Boolean).join(sep);
 }
 
+/** Multi-select chip fields (hair, wardrobe category, pose, camera angle, expression) all follow
+ * the same shape: a list of preset values plus one free-text "custom" field the user can fill in
+ * alongside (or instead of) the presets. */
+function joinSelectionWithCustom(values: string[], custom: string): string {
+  return joinNonEmpty([...values, custom]);
+}
+
 function libraryEnrichmentFor(state: PromptFormState, libraries: LibraryModule[]): string {
   const merged = mergeLibrarySelections(
     state.scenarioModuleSelections,
@@ -37,23 +44,28 @@ export function buildNaturalLanguagePrompt(
   libraries: LibraryModule[] = [],
   character?: CharacterProfile
 ): string {
+  const hair = joinSelectionWithCustom(state.hair, state.hairCustom);
+  const wardrobeCategory = joinSelectionWithCustom(state.wardrobeCategory, state.wardrobeCategoryCustom);
+  const pose = joinSelectionWithCustom(state.pose, state.poseCustom);
+  const cameraAngle = joinSelectionWithCustom(state.cameraAngle, state.cameraAngleCustom);
+  const expression = joinSelectionWithCustom(state.expression, state.expressionCustom);
+
   const subject = joinNonEmpty([
     ageDescriptor(state.age),
     state.gender,
     state.bodyType,
     state.skinTone,
-    state.hair,
+    hair,
     state.distinguishingFeatures,
   ]);
 
   const wardrobe = joinNonEmpty([
-    `wearing a ${state.wardrobeCategory}`,
+    `wearing ${wardrobeCategory}`,
     state.wardrobeDetails,
   ]);
 
   const accessories = joinNonEmpty([...state.accessories, state.accessoriesCustom]);
 
-  const pose = joinNonEmpty([state.pose, state.poseCustom]);
   const scene = joinNonEmpty([state.scene, state.sceneDetails]);
   const libraryEnrichment = libraryEnrichmentFor(state, libraries);
   const characterEnrichment = buildCharacterEnrichment(character);
@@ -62,8 +74,8 @@ export function buildNaturalLanguagePrompt(
     `Editorial fashion photograph of a ${subject},`,
     `${wardrobe}${accessories ? `, accessorized with ${accessories}` : ""},`,
     `${pose}, in ${scene}.`,
-    `Shot at ${state.cameraAngle} with a ${state.lens},`,
-    `lit by ${state.lighting}, ${state.expression}.`,
+    `Shot at ${cameraAngle} with a ${state.lens},`,
+    `lit by ${state.lighting}, ${expression}.`,
     `${state.style}, ${state.realism}.`,
     libraryEnrichment ? `Additional details: ${libraryEnrichment}.` : "",
     characterEnrichment ? `Character identity: ${characterEnrichment}.` : "",
@@ -84,20 +96,23 @@ export function buildTagStylePrompt(
     state.gender,
     state.bodyType,
     state.skinTone,
-    state.hair,
+    ...state.hair,
+    state.hairCustom,
     state.distinguishingFeatures,
-    `wearing ${state.wardrobeCategory}`,
+    `wearing ${joinSelectionWithCustom(state.wardrobeCategory, state.wardrobeCategoryCustom)}`,
     state.wardrobeDetails,
     ...state.accessories,
     state.accessoriesCustom,
-    state.pose,
+    ...state.pose,
     state.poseCustom,
     state.scene,
     state.sceneDetails,
-    state.cameraAngle,
+    ...state.cameraAngle,
+    state.cameraAngleCustom,
     state.lens,
     state.lighting,
-    state.expression,
+    ...state.expression,
+    state.expressionCustom,
     state.style,
     state.realism,
     libraryEnrichmentFor(state, libraries),

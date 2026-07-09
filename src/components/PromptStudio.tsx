@@ -196,6 +196,15 @@ export function PromptStudio() {
     }));
   }
 
+  type ChipField = "hair" | "wardrobeCategory" | "pose" | "cameraAngle" | "expression";
+
+  function toggleChipField(key: ChipField, value: string) {
+    setForm((prev) => ({
+      ...prev,
+      [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value],
+    }));
+  }
+
   function toggleLibraryOption(libraryKey: LibraryKey, moduleId: string, optionId: string) {
     const field = LIBRARY_SELECTION_FIELD[libraryKey];
     setForm((prev) => {
@@ -356,8 +365,11 @@ export function PromptStudio() {
           <Field label="Tom de pele">
             <SelectField value={form.skinTone} onChange={(v) => update("skinTone", v)} options={SKIN_TONE_OPTIONS} />
           </Field>
-          <Field label="Cabelo">
-            <SelectField value={form.hair} onChange={(v) => update("hair", v)} options={HAIR_OPTIONS} />
+          <Field label="Cabelo" full>
+            <ChipMultiSelect options={HAIR_OPTIONS} selected={form.hair} onToggle={(v) => toggleChipField("hair", v)} />
+          </Field>
+          <Field label="Cabelo (personalizado)" full>
+            <TextInput value={form.hairCustom} onChange={(v) => update("hairCustom", v)} placeholder="opcional" />
           </Field>
           <Field label="Características adicionais" hint="Ex: sardas, tatuagem discreta. Sem conteúdo sexual ou de menores.">
             <TextInput
@@ -369,11 +381,18 @@ export function PromptStudio() {
         </Section>
 
         <Section title="Roupas e acessórios">
-          <Field label="Categoria da roupa">
-            <SelectField
-              value={form.wardrobeCategory}
-              onChange={(v) => update("wardrobeCategory", v)}
+          <Field label="Categoria da roupa" full>
+            <ChipMultiSelect
               options={WARDROBE_CATEGORY_OPTIONS}
+              selected={form.wardrobeCategory}
+              onToggle={(v) => toggleChipField("wardrobeCategory", v)}
+            />
+          </Field>
+          <Field label="Categoria da roupa (personalizado)" full>
+            <TextInput
+              value={form.wardrobeCategoryCustom}
+              onChange={(v) => update("wardrobeCategoryCustom", v)}
+              placeholder="opcional"
             />
           </Field>
           <Field label="Cor / padrão / material">
@@ -406,17 +425,24 @@ export function PromptStudio() {
               placeholder="ex: pôr do sol, reflexos na água"
             />
           </Field>
-          <Field label="Pose">
-            <SelectField value={form.pose} onChange={(v) => update("pose", v)} options={POSE_OPTIONS} />
+          <Field label="Pose" full>
+            <ChipMultiSelect options={POSE_OPTIONS} selected={form.pose} onToggle={(v) => toggleChipField("pose", v)} />
           </Field>
           <Field label="Pose (personalizada)">
             <TextInput value={form.poseCustom} onChange={(v) => update("poseCustom", v)} placeholder="opcional" />
           </Field>
-          <Field label="Ângulo de câmera">
-            <SelectField
-              value={form.cameraAngle}
-              onChange={(v) => update("cameraAngle", v)}
+          <Field label="Ângulo de câmera" full>
+            <ChipMultiSelect
               options={CAMERA_ANGLE_OPTIONS}
+              selected={form.cameraAngle}
+              onToggle={(v) => toggleChipField("cameraAngle", v)}
+            />
+          </Field>
+          <Field label="Ângulo de câmera (personalizado)">
+            <TextInput
+              value={form.cameraAngleCustom}
+              onChange={(v) => update("cameraAngleCustom", v)}
+              placeholder="opcional"
             />
           </Field>
           <Field label="Lente">
@@ -444,12 +470,15 @@ export function PromptStudio() {
           <Field label="Iluminação">
             <SelectField value={form.lighting} onChange={(v) => update("lighting", v)} options={LIGHTING_OPTIONS} />
           </Field>
-          <Field label="Expressão facial">
-            <SelectField
-              value={form.expression}
-              onChange={(v) => update("expression", v)}
+          <Field label="Expressão facial" full>
+            <ChipMultiSelect
               options={EXPRESSION_OPTIONS}
+              selected={form.expression}
+              onToggle={(v) => toggleChipField("expression", v)}
             />
+          </Field>
+          <Field label="Expressão facial (personalizado)" full>
+            <TextInput value={form.expressionCustom} onChange={(v) => update("expressionCustom", v)} placeholder="opcional" />
           </Field>
         </Section>
 

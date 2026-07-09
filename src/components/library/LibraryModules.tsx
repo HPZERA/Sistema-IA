@@ -209,11 +209,20 @@ export function LibraryModules({
               )}
 
               {!manageMode && (
-                <ChipMultiSelect
-                  options={optionsToShow.map((opt) => ({ value: opt.id, label: opt.label }))}
-                  selected={selections[mod.id] ?? []}
-                  onToggle={(optionId) => onToggleOption(mod.id, optionId)}
-                />
+                <div className="flex flex-col gap-2">
+                  <ChipMultiSelect
+                    options={optionsToShow.map((opt) => ({ value: opt.id, label: opt.label }))}
+                    selected={selections[mod.id] ?? []}
+                    onToggle={(optionId) => onToggleOption(mod.id, optionId)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAddOptionForModuleId(mod.id)}
+                    className="self-start rounded-lg border border-dashed border-white/15 px-2.5 py-1 text-[11px] font-medium text-neutral-400 hover:border-fuchsia-400/50 hover:text-fuchsia-200"
+                  >
+                    + Adicionar item em {mod.name}
+                  </button>
+                </div>
               )}
 
               {manageMode && (
