@@ -27,6 +27,7 @@ export function buildCharacterEnrichment(character: CharacterProfile | undefined
     character.weight,
     character.tattoos ? `tattoos: ${character.tattoos}` : "",
     character.piercings ? `piercings: ${character.piercings}` : "",
+    character.accessories ? `accessories: ${character.accessories}` : "",
     character.style ? `${character.style} style` : "",
     character.notes,
   ]);
@@ -34,5 +35,5 @@ export function buildCharacterEnrichment(character: CharacterProfile | undefined
   const identity = `the recurring model ${character.name}: ${traits}`;
   const consistency = CONSISTENCY_CLAUSE[character.consistencyLevel];
 
-  return joinNonEmpty([identity, consistency]);
+  return joinNonEmpty([identity, consistency, character.basePrompt]);
 }

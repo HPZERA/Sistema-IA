@@ -46,6 +46,22 @@ describe("buildNegativePrompt", () => {
   it("appends user-supplied extra negative terms", () => {
     expect(buildNegativePrompt(undefined, "extra term")).toContain("extra term");
   });
+
+  it("includes the Motor de Fotografia Real anti-AI-look terms for the default 'Muito Natural' profile", () => {
+    expect(buildNegativePrompt(DEFAULT_FORM_STATE)).toContain("overprocessed HDR");
+  });
+
+  it("omits the Motor de Fotografia Real terms for other image profiles", () => {
+    expect(buildNegativePrompt({ ...DEFAULT_FORM_STATE, imageProfile: "editorial" })).not.toContain("overprocessed HDR");
+  });
+});
+
+describe("buildPromptForProvider — Motor de Fotografia Real", () => {
+  it("includes the default photo style and 'Muito Natural' clause block", () => {
+    const prompt = buildPromptForProvider(DEFAULT_FORM_STATE);
+    expect(prompt).toContain("realistic modern smartphone photography");
+    expect(prompt).toContain("Authentic handheld photograph");
+  });
 });
 
 describe("aspectRatioToSize", () => {

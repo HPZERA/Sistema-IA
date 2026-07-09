@@ -1,5 +1,6 @@
 import { AnonymousFramingState } from "@/types/anonymousFraming";
 import { FACE_ANONYMITY_POSITIVE_CLAUSES } from "@/lib/faceVisibility";
+import { buildRealPhotoEngineClause, buildRealPhotoEngineNegativeTerms } from "@/lib/realPhotoEngine";
 import { MANDATORY_SAFETY_NEGATIVE_TERMS } from "@/lib/safety";
 
 function joinNonEmpty(parts: (string | undefined | null)[], sep = ", "): string {
@@ -185,6 +186,7 @@ export function buildAnonymousFramingPrompt(state: AnonymousFramingState): strin
     cameraDetails,
     state.customPrompt,
     "photorealistic, authentic smartphone photography, natural color grading",
+    buildRealPhotoEngineClause(state),
   ]);
 }
 
@@ -194,9 +196,14 @@ export const ANONYMOUS_FRAMING_NEGATIVE_TERMS =
   "visible face, eyes, facial features, head, torso, full body, portrait, front-facing person, profile face, face reflection, mirror reflection, recognizable identity, extra fingers, deformed hand, bad anatomy, plastic skin, waxy skin, oversaturated colors, AI-looking image";
 
 /** Full negative prompt for this page: the fixed anonymity/quality terms above plus the app-wide
- * mandatory safety terms (nudity, minors, ...) — never the main Prompt Studio's negative prompt. */
-export function buildAnonymousFramingNegativePrompt(): string {
-  return joinNonEmpty([MANDATORY_SAFETY_NEGATIVE_TERMS, ANONYMOUS_FRAMING_NEGATIVE_TERMS]);
+ * mandatory safety terms (nudity, minors, ...) and the Motor de Fotografia Real's terms when its
+ * "Muito Natural" profile is active — never the main Prompt Studio's negative prompt. */
+export function buildAnonymousFramingNegativePrompt(state?: AnonymousFramingState): string {
+  return joinNonEmpty([
+    MANDATORY_SAFETY_NEGATIVE_TERMS,
+    ANONYMOUS_FRAMING_NEGATIVE_TERMS,
+    buildRealPhotoEngineNegativeTerms(state),
+  ]);
 }
 
 export interface AnonymousFramingPreset {

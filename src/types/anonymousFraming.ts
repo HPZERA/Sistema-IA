@@ -14,6 +14,15 @@ export interface AnonymousFramingState {
   camera: string[];
   customPrompt: string;
   consentAccepted: boolean;
+
+  // Motor de Fotografia Real — pushes generations toward authentic phone/camera photography
+  // instead of a polished "AI/CGI" look (src/lib/realPhotoEngine.ts).
+  photoStyle: string;
+  imageProfile: string;
+  lightIntensity: string;
+  saturation: string;
+  contrast: string;
+  hdr: string;
 }
 
 export const DEFAULT_ANONYMOUS_FRAMING_STATE: AnonymousFramingState = {
@@ -28,4 +37,11 @@ export const DEFAULT_ANONYMOUS_FRAMING_STATE: AnonymousFramingState = {
   camera: [],
   customPrompt: "",
   consentAccepted: false,
+
+  photoStyle: "realistic modern smartphone photography, authentic handheld phone camera look",
+  imageProfile: "muito-natural",
+  lightIntensity: "soft natural lighting",
+  saturation: "low color saturation, muted natural tones",
+  contrast: "natural balanced contrast",
+  hdr: "no HDR processing, natural single exposure",
 };

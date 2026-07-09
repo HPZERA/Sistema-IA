@@ -10,6 +10,7 @@ import {
   ASPECT_RATIO_OPTIONS,
   BODY_TYPE_OPTIONS,
   CAMERA_ANGLE_OPTIONS,
+  CONTRAST_OPTIONS,
   EARRING_OPTIONS,
   EXPRESSION_OPTIONS,
   FACE_CONCEALMENT_STRENGTH_OPTIONS,
@@ -17,13 +18,18 @@ import {
   FACE_VISIBILITY_OPTIONS,
   GENDER_OPTIONS,
   HAIR_OPTIONS,
+  HDR_OPTIONS,
+  IMAGE_PROFILE_OPTIONS,
   LIPS_OPTIONS,
+  LIGHT_INTENSITY_OPTIONS,
   NOSE_OPTIONS,
   LENS_OPTIONS,
   LIGHTING_OPTIONS,
   MODEL_PROVIDER_OPTIONS,
   POSE_OPTIONS,
+  REAL_PHOTO_STYLE_OPTIONS,
   REALISM_OPTIONS,
+  SATURATION_OPTIONS,
   SCENE_OPTIONS,
   SKIN_TONE_OPTIONS,
   STYLE_OPTIONS,
@@ -44,6 +50,8 @@ type GeneratedImage = { url: string };
 
 const LOAD_GENERATION_KEY = "dark-brand:load-generation";
 export const LOAD_CONFIGURATION_KEY = "dark-brand:load-configuration";
+// Handoff from "Meus Personagens" → Aplicar no Prompt Studio (src/components/characters/CharacterLibrary.tsx).
+export const APPLY_CHARACTER_KEY = "dark-brand:apply-character";
 
 interface LoadGenerationPayload {
   formSnapshot?: PromptFormState;
@@ -176,6 +184,16 @@ export function PromptStudio() {
     } catch {
       // ignore malformed handoff payloads
     }
+  }, []);
+
+  // Handoff from "Meus Personagens" → Aplicar no Prompt Studio: just select that saved
+  // character, keeping every other field as-is (unlike a Configuration, this doesn't replace
+  // the whole form/prompt).
+  useEffect(() => {
+    const characterId = window.sessionStorage.getItem(APPLY_CHARACTER_KEY);
+    if (!characterId) return;
+    window.sessionStorage.removeItem(APPLY_CHARACTER_KEY);
+    setForm((prev) => ({ ...prev, selectedCharacterId: characterId }));
   }, []);
 
   useEffect(() => {
@@ -648,6 +666,37 @@ export function PromptStudio() {
               onChange={(v) => update("aspectRatio", v)}
               options={ASPECT_RATIO_OPTIONS}
             />
+          </Field>
+        </Section>
+
+        <Section
+          title="Motor de Fotografia Real"
+          description="Empurra a geração para uma aparência de fotografia real tirada por uma pessoa (smartphone ou câmera profissional), evitando o aspecto editorial e a iluminação perfeita típicos de imagens geradas por IA."
+        >
+          <Field label="Estilo fotográfico">
+            <SelectField value={form.photoStyle} onChange={(v) => update("photoStyle", v)} options={REAL_PHOTO_STYLE_OPTIONS} />
+          </Field>
+          <Field
+            label="Perfil de imagem"
+            hint={
+              form.imageProfile === "muito-natural"
+                ? "Aplica automaticamente um conjunto reforçado de termos de naturalidade ao prompt e ao prompt negativo."
+                : undefined
+            }
+          >
+            <SelectField value={form.imageProfile} onChange={(v) => update("imageProfile", v)} options={IMAGE_PROFILE_OPTIONS} />
+          </Field>
+          <Field label="Intensidade da luz">
+            <SelectField value={form.lightIntensity} onChange={(v) => update("lightIntensity", v)} options={LIGHT_INTENSITY_OPTIONS} />
+          </Field>
+          <Field label="Saturação">
+            <SelectField value={form.saturation} onChange={(v) => update("saturation", v)} options={SATURATION_OPTIONS} />
+          </Field>
+          <Field label="Contraste">
+            <SelectField value={form.contrast} onChange={(v) => update("contrast", v)} options={CONTRAST_OPTIONS} />
+          </Field>
+          <Field label="HDR" hint="Nunca use HDR alto — mantenha em Desativado ou Baixo para o resultado mais realista.">
+            <SelectField value={form.hdr} onChange={(v) => update("hdr", v)} options={HDR_OPTIONS} />
           </Field>
         </Section>
       </div>

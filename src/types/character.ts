@@ -44,8 +44,10 @@ export interface CharacterProfile {
   weight: string;
   tattoos: string;
   piercings: string;
+  accessories: string;
   style: string;
   notes: string;
+  basePrompt: string;
   consistencyLevel: ConsistencyLevel;
   createdAt: string;
   updatedAt: string;

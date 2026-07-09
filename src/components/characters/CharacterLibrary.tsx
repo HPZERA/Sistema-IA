@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CharacterForm } from "@/components/characters/CharacterForm";
 import { TextInput } from "@/components/ui/Field";
 import { CharacterSummary, CharacterWithImages, CONSISTENCY_LEVEL_OPTIONS } from "@/types/character";
+import { APPLY_CHARACTER_KEY } from "@/components/PromptStudio";
+import { APPLY_CHARACTER_TO_ANONYMOUS_KEY } from "@/components/AnonymousFramingStudio";
 
 export function CharacterLibrary() {
+  const router = useRouter();
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -31,10 +34,25 @@ export function CharacterLibrary() {
     if (res.ok) setEditing(data.character);
   }
 
+  async function handleDuplicate(id: string) {
+    await fetch(`/api/characters/${id}/duplicate`, { method: "POST" });
+    await refresh();
+  }
+
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Remover o personagem "${name}" e todas as suas imagens? Essa ação não pode ser desfeita.`)) return;
     await fetch(`/api/characters/${id}`, { method: "DELETE" });
     await refresh();
+  }
+
+  function applyToPromptStudio(id: string) {
+    window.sessionStorage.setItem(APPLY_CHARACTER_KEY, id);
+    router.push("/");
+  }
+
+  function applyToAnonymousFraming(id: string) {
+    window.sessionStorage.setItem(APPLY_CHARACTER_TO_ANONYMOUS_KEY, id);
+    router.push("/enquadramento-anonimo");
   }
 
   function consistencyLabel(level: string) {
@@ -51,27 +69,20 @@ export function CharacterLibrary() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-8 lg:px-8">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-neutral-50">Biblioteca de Personagens</h2>
+          <h2 className="text-xl font-semibold text-neutral-50">Meus Personagens</h2>
           <p className="mt-1 max-w-2xl text-sm text-neutral-400">
-            Salve identidades visuais reutilizáveis. Ao selecionar um personagem no Prompt Studio, seus traços e
-            imagens de referência são usados para manter a mesma identidade em todas as gerações.
+            Salve manualmente identidades visuais reutilizáveis direto no sistema — tudo fica gravado no banco de
+            dados. Depois é só abrir um personagem salvo e aplicar com 1 clique no Prompt Studio ou no Enquadramento
+            Anônimo.
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="whitespace-nowrap rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-xs font-semibold text-white"
-          >
-            + Novo personagem
-          </button>
-          <Link
-            href="/"
-            className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
-          >
-            ← Prompt Studio
-          </Link>
-        </div>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="whitespace-nowrap rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-xs font-semibold text-white"
+        >
+          + Criar personagem
+        </button>
       </header>
 
       {characters.length > 0 && (
@@ -82,7 +93,7 @@ export function CharacterLibrary() {
 
       {!loading && characters.length === 0 && (
         <p className="rounded-xl border border-white/10 bg-neutral-900/40 p-4 text-sm text-neutral-400">
-          Nenhum personagem cadastrado ainda. Clique em &quot;Novo personagem&quot; para criar o primeiro.
+          Nenhum personagem cadastrado ainda. Clique em &quot;Criar personagem&quot; para criar o primeiro.
         </p>
       )}
 
@@ -108,18 +119,39 @@ export function CharacterLibrary() {
               <span className="text-[11px] text-neutral-500">
                 {c.age} anos · {c.imageCount} imagem(ns) · consistência {consistencyLabel(c.consistencyLevel)}
               </span>
-              <div className="mt-auto flex gap-2 pt-2">
+              <div className="mt-auto grid grid-cols-2 gap-1.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => applyToPromptStudio(c.id)}
+                  className="col-span-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-1.5 text-[11px] font-semibold text-white"
+                >
+                  Aplicar no Prompt Studio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyToAnonymousFraming(c.id)}
+                  className="col-span-2 rounded-lg border border-white/10 bg-neutral-900/70 px-2 py-1 text-[11px] text-neutral-300 hover:border-white/25"
+                >
+                  Aplicar no Enquadramento Anônimo
+                </button>
                 <button
                   type="button"
                   onClick={() => openEdit(c.id)}
-                  className="flex-1 rounded-lg border border-white/10 bg-neutral-900/70 px-2 py-1 text-[11px] text-neutral-300 hover:border-white/25"
+                  className="rounded-lg border border-white/10 bg-neutral-900/70 px-2 py-1 text-[11px] text-neutral-300 hover:border-white/25"
                 >
                   Editar
                 </button>
                 <button
                   type="button"
+                  onClick={() => handleDuplicate(c.id)}
+                  className="rounded-lg border border-white/10 bg-neutral-900/70 px-2 py-1 text-[11px] text-neutral-300 hover:border-white/25"
+                >
+                  Duplicar
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleDelete(c.id, c.name)}
-                  className="rounded-lg border border-red-400/30 px-2 py-1 text-[11px] text-red-300 hover:bg-red-400/10"
+                  className="col-span-2 rounded-lg border border-red-400/30 px-2 py-1 text-[11px] text-red-300 hover:bg-red-400/10"
                 >
                   Excluir
                 </button>

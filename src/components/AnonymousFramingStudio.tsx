@@ -13,6 +13,12 @@ import {
   ANONYMOUS_HAND_DETAIL_OPTIONS,
   ANONYMOUS_LIGHTING_OPTIONS,
   ANONYMOUS_PERSON_OPTIONS,
+  CONTRAST_OPTIONS,
+  HDR_OPTIONS,
+  IMAGE_PROFILE_OPTIONS,
+  LIGHT_INTENSITY_OPTIONS,
+  REAL_PHOTO_STYLE_OPTIONS,
+  SATURATION_OPTIONS,
 } from "@/types/promptOptions";
 import { AnonymousFramingState, DEFAULT_ANONYMOUS_FRAMING_STATE } from "@/types/anonymousFraming";
 import {
@@ -23,14 +29,34 @@ import {
 } from "@/lib/anonymousFraming";
 import { validateSubmission } from "@/lib/safety";
 import { ConfigurationDetail } from "@/types/configuration";
+import { CharacterProfile } from "@/types/character";
 
 export const LOAD_ANONYMOUS_CONFIGURATION_KEY = "dark-brand:load-anonymous-configuration";
+// Handoff from "Meus Personagens" → Aplicar no Enquadramento Anônimo (src/components/characters/CharacterLibrary.tsx).
+export const APPLY_CHARACTER_TO_ANONYMOUS_KEY = "dark-brand:apply-character-anonymous";
 
 type GeneratedImage = { url: string };
 
 type LoadedAnonymousConfiguration = Pick<ConfigurationDetail, "id" | "name" | "description" | "tags">;
 
 type ChipField = "framingType" | "focusObject" | "handDetails" | "camera";
+
+function joinNonEmpty(parts: (string | undefined | null)[], sep = ", "): string {
+  return parts.map((p) => p?.trim()).filter(Boolean).join(sep);
+}
+
+// Maps a saved Character Library profile onto this page's own, independent field set — only the
+// traits that still make sense once the face/body are out of frame (gender, skin, tattoos,
+// accessories, base prompt). Never touches PromptFormState or the main Prompt Studio.
+function characterToAnonymousFields(character: CharacterProfile): Partial<AnonymousFramingState> {
+  const person = character.gender === "man" ? "adult man" : "adult woman";
+  const handDetailsCustom = joinNonEmpty([
+    character.skinColor ? `${character.skinColor} skin` : "",
+    character.tattoos ? `tattoos: ${character.tattoos}` : "",
+    character.accessories,
+  ]);
+  return { person, handDetailsCustom, customPrompt: character.basePrompt };
+}
 
 export function AnonymousFramingStudio() {
   const [form, setForm] = useState<AnonymousFramingState>(DEFAULT_ANONYMOUS_FRAMING_STATE);
@@ -39,7 +65,7 @@ export function AnonymousFramingStudio() {
   const [touched, setTouched] = useState(false);
 
   const [prompt, setPrompt] = useState("");
-  const [negativePrompt, setNegativePrompt] = useState(() => buildAnonymousFramingNegativePrompt());
+  const [negativePrompt, setNegativePrompt] = useState(() => buildAnonymousFramingNegativePrompt(DEFAULT_ANONYMOUS_FRAMING_STATE));
   const [promptTouched, setPromptTouched] = useState(false);
 
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -69,6 +95,22 @@ export function AnonymousFramingStudio() {
     } catch {
       // ignore malformed handoff payloads
     }
+  }, []);
+
+  useEffect(() => {
+    const characterId = window.sessionStorage.getItem(APPLY_CHARACTER_TO_ANONYMOUS_KEY);
+    if (!characterId) return;
+    window.sessionStorage.removeItem(APPLY_CHARACTER_TO_ANONYMOUS_KEY);
+    fetch(`/api/characters/${characterId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.character) return;
+        setTouched(true);
+        setForm((prev) => ({ ...prev, ...characterToAnonymousFields(data.character) }));
+      })
+      .catch(() => {
+        // ignore — character may have been deleted since the handoff was created
+      });
   }, []);
 
   useEffect(() => {
@@ -109,7 +151,7 @@ export function AnonymousFramingStudio() {
 
   function resyncPromptFromFields() {
     setPrompt(touched ? buildAnonymousFramingPrompt(form) : "");
-    setNegativePrompt(buildAnonymousFramingNegativePrompt());
+    setNegativePrompt(buildAnonymousFramingNegativePrompt(form));
     setPromptTouched(false);
   }
 
@@ -243,6 +285,49 @@ export function AnonymousFramingStudio() {
           </Field>
           <Field label="Câmera" full>
             <ChipMultiSelect options={ANONYMOUS_CAMERA_OPTIONS} selected={form.camera} onToggle={(v) => toggleChip("camera", v)} />
+          </Field>
+        </Section>
+
+        <Section
+          title="Motor de Fotografia Real"
+          description="Empurra a geração para uma aparência de fotografia real tirada por uma pessoa (smartphone ou câmera profissional), evitando o aspecto editorial e a iluminação perfeita típicos de imagens geradas por IA."
+        >
+          <Field label="Estilo fotográfico">
+            <SelectField
+              value={form.photoStyle}
+              onChange={(v) => updateField("photoStyle", v)}
+              options={REAL_PHOTO_STYLE_OPTIONS}
+            />
+          </Field>
+          <Field
+            label="Perfil de imagem"
+            hint={
+              form.imageProfile === "muito-natural"
+                ? "Aplica automaticamente um conjunto reforçado de termos de naturalidade ao prompt e ao prompt negativo."
+                : undefined
+            }
+          >
+            <SelectField
+              value={form.imageProfile}
+              onChange={(v) => updateField("imageProfile", v)}
+              options={IMAGE_PROFILE_OPTIONS}
+            />
+          </Field>
+          <Field label="Intensidade da luz">
+            <SelectField
+              value={form.lightIntensity}
+              onChange={(v) => updateField("lightIntensity", v)}
+              options={LIGHT_INTENSITY_OPTIONS}
+            />
+          </Field>
+          <Field label="Saturação">
+            <SelectField value={form.saturation} onChange={(v) => updateField("saturation", v)} options={SATURATION_OPTIONS} />
+          </Field>
+          <Field label="Contraste">
+            <SelectField value={form.contrast} onChange={(v) => updateField("contrast", v)} options={CONTRAST_OPTIONS} />
+          </Field>
+          <Field label="HDR" hint="Nunca use HDR alto — mantenha em Desativado ou Baixo para o resultado mais realista.">
+            <SelectField value={form.hdr} onChange={(v) => updateField("hdr", v)} options={HDR_OPTIONS} />
           </Field>
         </Section>
 

@@ -51,6 +51,15 @@ export interface PromptFormState {
   aspectRatio: string;
   realism: string;
 
+  // Motor de Fotografia Real — pushes generations toward authentic phone/camera photography
+  // instead of a polished "AI/CGI" look (src/lib/realPhotoEngine.ts).
+  photoStyle: string;
+  imageProfile: string;
+  lightIntensity: string;
+  saturation: string;
+  contrast: string;
+  hdr: string;
+
   // Generation
   provider: ProviderId;
   consentAccepted: boolean;
@@ -109,6 +118,13 @@ export const DEFAULT_FORM_STATE: PromptFormState = {
   style: "high-fashion editorial photography",
   aspectRatio: "4:5",
   realism: "ultra-detailed photorealistic, shot on professional DSLR",
+
+  photoStyle: "realistic modern smartphone photography, authentic handheld phone camera look",
+  imageProfile: "muito-natural",
+  lightIntensity: "soft natural lighting",
+  saturation: "low color saturation, muted natural tones",
+  contrast: "natural balanced contrast",
+  hdr: "no HDR processing, natural single exposure",
 
   provider: "flux-dev",
   consentAccepted: false,

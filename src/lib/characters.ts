@@ -29,8 +29,10 @@ function toProfile(row: typeof characters.$inferSelect): CharacterProfile {
     weight: row.weight,
     tattoos: row.tattoos,
     piercings: row.piercings,
+    accessories: row.accessories,
     style: row.style,
     notes: row.notes,
+    basePrompt: row.basePrompt,
     consistencyLevel: row.consistencyLevel as ConsistencyLevel,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -97,6 +99,54 @@ export async function updateCharacter(id: string, patch: Partial<CharacterInput>
     .where(eq(characters.id, id))
     .returning();
   return row ? toProfile(row) : undefined;
+}
+
+export async function duplicateCharacter(id: string): Promise<CharacterProfile | undefined> {
+  const db = getDb();
+  const original = await getCharacterWithImages(id);
+  if (!original) return undefined;
+
+  const [row] = await db
+    .insert(characters)
+    .values({
+      name: `${original.name} (cópia)`,
+      gender: original.gender,
+      age: original.age,
+      height: original.height,
+      skinColor: original.skinColor,
+      eyeColor: original.eyeColor,
+      faceShape: original.faceShape,
+      hairColor: original.hairColor,
+      hairLength: original.hairLength,
+      hairType: original.hairType,
+      bodyType: original.bodyType,
+      weight: original.weight,
+      tattoos: original.tattoos,
+      piercings: original.piercings,
+      accessories: original.accessories,
+      style: original.style,
+      notes: original.notes,
+      basePrompt: original.basePrompt,
+      consistencyLevel: original.consistencyLevel,
+    })
+    .returning();
+
+  // Reference the same Blob objects rather than re-uploading — cheap copy, matches
+  // duplicateConfiguration's coverImageUrl handling in src/lib/configurations.ts.
+  if (original.images.length > 0) {
+    await db.insert(characterImages).values(
+      original.images.map((img) => ({
+        characterId: row.id,
+        blobUrl: img.blobUrl,
+        fileName: img.fileName,
+        fileType: img.fileType,
+        referenceType: img.referenceType,
+        order: img.order,
+      }))
+    );
+  }
+
+  return toProfile(row);
 }
 
 export async function deleteCharacter(id: string): Promise<boolean> {

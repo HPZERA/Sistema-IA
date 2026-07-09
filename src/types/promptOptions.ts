@@ -364,6 +364,61 @@ export const ANONYMOUS_CAMERA_OPTIONS: Option[] = [
   { value: "shallow depth of field", label: "Profundidade de campo" },
 ];
 
+// Motor de Fotografia Real — camera/style, image profile and fine-grained light/color controls
+// that push generations toward authentic phone/camera photography instead of a polished "AI/CGI
+// look". Shared by both the main Prompt Studio and Enquadramento Anônimo (src/lib/realPhotoEngine.ts).
+// `value` is the English prompt phrase directly interpolated into the final prompt — except
+// IMAGE_PROFILE_OPTIONS, whose value is a lookup key resolved to its full clause block there.
+export const REAL_PHOTO_STYLE_OPTIONS: Option[] = [
+  { value: "realistic modern smartphone photography, authentic handheld phone camera look", label: "Smartphone Realista" },
+  { value: "shot on iPhone, natural iPhone camera color science", label: "iPhone" },
+  { value: "shot on Samsung Galaxy smartphone camera, natural Samsung image processing", label: "Samsung Galaxy" },
+  { value: "shot on Google Pixel smartphone, natural computational photography look", label: "Google Pixel" },
+  { value: "shot on a professional DSLR camera", label: "DSLR Profissional" },
+  { value: "shot on a professional mirrorless camera", label: "Mirrorless" },
+  { value: "editorial photography style", label: "Editorial" },
+  { value: "candid lifestyle photography style", label: "Lifestyle" },
+  { value: "influencer-style social media photography", label: "Influencer" },
+  { value: "travel photography style, candid documentary feel", label: "Viagem" },
+  { value: "casual everyday snapshot photography style", label: "Casual" },
+  { value: "cinematic photography style, film-like framing", label: "Cinema" },
+];
+
+export const IMAGE_PROFILE_OPTIONS: Option[] = [
+  { value: "natural", label: "Natural" },
+  { value: "muito-natural", label: "Muito Natural (padrão)" },
+  { value: "instagram", label: "Instagram" },
+  { value: "editorial", label: "Editorial" },
+  { value: "cinematico", label: "Cinemático" },
+];
+
+export const LIGHT_INTENSITY_OPTIONS: Option[] = [
+  { value: "very soft diffused lighting, gentle low-contrast light", label: "Muito Suave" },
+  { value: "soft natural lighting", label: "Suave (padrão)" },
+  { value: "natural balanced lighting", label: "Natural" },
+  { value: "warm golden hour lighting", label: "Golden Hour" },
+  { value: "dramatic directional lighting with defined shadows", label: "Dramática" },
+];
+
+export const SATURATION_OPTIONS: Option[] = [
+  { value: "very low color saturation, desaturated tones", label: "Muito baixa" },
+  { value: "low color saturation, muted natural tones", label: "Baixa (padrão)" },
+  { value: "natural true-to-life color saturation", label: "Natural" },
+  { value: "vivid high color saturation", label: "Alta" },
+];
+
+export const CONTRAST_OPTIONS: Option[] = [
+  { value: "low contrast, soft tonal range", label: "Baixo" },
+  { value: "natural balanced contrast", label: "Natural (padrão)" },
+  { value: "high contrast with deep shadows and bright highlights", label: "Alto" },
+];
+
+export const HDR_OPTIONS: Option[] = [
+  { value: "no HDR processing, natural single exposure", label: "Desativado (padrão)" },
+  { value: "subtle low-level HDR blending, gentle dynamic range enhancement", label: "Baixo" },
+  { value: "moderate HDR processing, balanced dynamic range enhancement", label: "Médio" },
+];
+
 export const MODEL_PROVIDER_OPTIONS: Option[] = [
   { value: "flux-dev", label: "FLUX.1 [dev] — alta qualidade" },
   { value: "flux-schnell", label: "FLUX.1 [schnell] — rápido" },

@@ -106,4 +106,21 @@ describe("buildAnonymousFramingNegativePrompt", () => {
   it("always includes the mandatory safety negative terms", () => {
     expect(buildAnonymousFramingNegativePrompt()).toContain("nudity");
   });
+
+  it("includes the Motor de Fotografia Real anti-AI-look terms for the default 'Muito Natural' profile", () => {
+    expect(buildAnonymousFramingNegativePrompt(DEFAULT_ANONYMOUS_FRAMING_STATE)).toContain("overprocessed HDR");
+  });
+
+  it("omits the Motor de Fotografia Real terms for other image profiles", () => {
+    const state = { ...DEFAULT_ANONYMOUS_FRAMING_STATE, imageProfile: "editorial" };
+    expect(buildAnonymousFramingNegativePrompt(state)).not.toContain("overprocessed HDR");
+  });
+});
+
+describe("buildAnonymousFramingPrompt — Motor de Fotografia Real", () => {
+  it("includes the default photo style and 'Muito Natural' clause block", () => {
+    const clause = buildAnonymousFramingPrompt(DEFAULT_ANONYMOUS_FRAMING_STATE);
+    expect(clause).toContain("realistic modern smartphone photography");
+    expect(clause).toContain("Authentic handheld photograph");
+  });
 });

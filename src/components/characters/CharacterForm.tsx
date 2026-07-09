@@ -23,8 +23,10 @@ type FormFields = {
   weight: string;
   tattoos: string;
   piercings: string;
+  accessories: string;
   style: string;
   notes: string;
+  basePrompt: string;
   consistencyLevel: ConsistencyLevel;
 };
 
@@ -43,8 +45,10 @@ const EMPTY: FormFields = {
   weight: "",
   tattoos: "",
   piercings: "",
+  accessories: "",
   style: "",
   notes: "",
+  basePrompt: "",
   consistencyLevel: "media",
 };
 
@@ -137,6 +141,13 @@ export function CharacterForm({
           <Field label="Piercings">
             <TextInput value={fields.piercings} onChange={(v) => update("piercings", v)} placeholder="opcional" />
           </Field>
+          <Field label="Acessórios">
+            <TextInput
+              value={fields.accessories}
+              onChange={(v) => update("accessories", v)}
+              placeholder="ex: relógio, óculos, joias"
+            />
+          </Field>
           <Field label="Estilo">
             <TextInput value={fields.style} onChange={(v) => update("style", v)} placeholder="ex: editorial, streetwear" />
           </Field>
@@ -150,6 +161,9 @@ export function CharacterForm({
           <Field label="Observações" full>
             <TextArea rows={2} value={fields.notes} onChange={(v) => update("notes", v)} placeholder="opcional" />
           </Field>
+          <Field label="Prompt base" full hint="Opcional: trecho de prompt fixo sempre incluído quando este personagem é usado.">
+            <TextArea rows={2} value={fields.basePrompt} onChange={(v) => update("basePrompt", v)} placeholder="opcional" />
+          </Field>
         </div>
 
         {error && <p className="text-xs text-red-400">{error}</p>}
@@ -161,7 +175,7 @@ export function CharacterForm({
             onClick={handleSave}
             className="rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
           >
-            {saving ? "Salvando..." : characterId ? "Salvar alterações" : "Criar personagem"}
+            {saving ? "Salvando..." : characterId ? "Salvar alterações" : "Salvar personagem"}
           </button>
           {saved && <span className="text-xs text-emerald-400">Salvo.</span>}
         </div>

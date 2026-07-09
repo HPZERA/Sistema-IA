@@ -19,8 +19,10 @@ const PATCHABLE_FIELDS: (keyof CharacterInput)[] = [
   "weight",
   "tattoos",
   "piercings",
+  "accessories",
   "style",
   "notes",
+  "basePrompt",
   "consistencyLevel",
 ];
 
@@ -44,7 +46,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.consistencyLevel !== undefined && !CONSISTENCY_LEVELS.includes(body.consistencyLevel)) {
     return NextResponse.json({ error: "Nível de consistência inválido." }, { status: 400 });
   }
-  for (const field of ["notes", "style", "tattoos", "piercings"] as const) {
+  for (const field of ["notes", "style", "tattoos", "piercings", "accessories", "basePrompt"] as const) {
     if (typeof body[field] === "string" && scanTextForViolations(body[field])) {
       return NextResponse.json({ error: `O campo "${field}" contém um termo não permitido pela política de conteúdo.` }, { status: 400 });
     }

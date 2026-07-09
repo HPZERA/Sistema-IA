@@ -4,6 +4,7 @@ import { PHOTOGRAPHY_STANDARD_CLAUSE, PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS } from
 import { buildLibraryEnrichment, mergeLibrarySelections } from "@/lib/libraryPrompt";
 import { buildCharacterEnrichment } from "@/lib/characterPrompt";
 import { buildFaceVisibilityNegativeTerms, buildFaceVisibilityPositiveClause } from "@/lib/faceVisibility";
+import { buildRealPhotoEngineClause, buildRealPhotoEngineNegativeTerms } from "@/lib/realPhotoEngine";
 import { LibraryModule } from "@/types/library";
 import { CharacterProfile } from "@/types/character";
 
@@ -77,6 +78,7 @@ export function buildNaturalLanguagePrompt(
 
   const scene = joinNonEmpty([state.scene, state.sceneDetails]);
   const faceVisibilityClause = buildFaceVisibilityPositiveClause(state);
+  const realPhotoClause = buildRealPhotoEngineClause(state);
 
   const sentence = [
     `Editorial fashion photograph of a ${subject},`,
@@ -89,6 +91,7 @@ export function buildNaturalLanguagePrompt(
     libraryEnrichment ? `Additional details: ${libraryEnrichment}.` : "",
     characterEnrichment ? `Character identity: ${characterEnrichment}.` : "",
     PHOTOGRAPHY_STANDARD_CLAUSE,
+    realPhotoClause ? `${realPhotoClause}.` : "",
   ].join(" ");
 
   return sentence.replace(/\s+/g, " ").trim();
@@ -133,6 +136,7 @@ export function buildTagStylePrompt(
     libraryEnrichmentFor(state, libraries),
     buildCharacterEnrichment(character),
     PHOTOGRAPHY_STANDARD_CLAUSE,
+    buildRealPhotoEngineClause(state),
   ];
   return tags.map((t) => t?.trim()).filter(Boolean).join(", ");
 }
@@ -154,6 +158,7 @@ export function buildNegativePrompt(state?: PromptFormState, userNegativeExtra?:
     BASE_QUALITY_NEGATIVE_TERMS,
     PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS,
     state ? buildFaceVisibilityNegativeTerms(state) : "",
+    buildRealPhotoEngineNegativeTerms(state),
     userNegativeExtra,
   ]);
 }

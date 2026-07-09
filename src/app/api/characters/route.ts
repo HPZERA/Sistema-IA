@@ -13,7 +13,7 @@ function validateCharacterInput(body: Record<string, unknown>): string | null {
   if (body.consistencyLevel && !CONSISTENCY_LEVELS.includes(body.consistencyLevel as ConsistencyLevel)) {
     return "Nível de consistência inválido.";
   }
-  const freeText = [body.notes, body.style, body.tattoos, body.piercings].filter(
+  const freeText = [body.notes, body.style, body.tattoos, body.piercings, body.accessories, body.basePrompt].filter(
     (v): v is string => typeof v === "string" && v.length > 0
   );
   for (const text of freeText) {
@@ -53,8 +53,10 @@ export async function POST(request: Request) {
     weight: toStringField(body.weight),
     tattoos: toStringField(body.tattoos),
     piercings: toStringField(body.piercings),
+    accessories: toStringField(body.accessories),
     style: toStringField(body.style),
     notes: toStringField(body.notes),
+    basePrompt: toStringField(body.basePrompt),
     consistencyLevel: (body.consistencyLevel as ConsistencyLevel) || "media",
   };
 
