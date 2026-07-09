@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Section } from "@/components/ui/Section";
 import { Field, SelectField, TextInput, TextArea } from "@/components/ui/Field";
 import { ChipMultiSelect } from "@/components/ui/ChipMultiSelect";
@@ -159,21 +158,13 @@ export function AnonymousFramingStudio() {
   return (
     <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 px-4 py-8 lg:grid-cols-[1fr_420px] lg:px-8">
       <div className="flex flex-col gap-5">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-neutral-50">🕶️ Enquadramento Anônimo</h1>
-            <p className="mt-1 max-w-2xl text-sm text-neutral-400">
-              Página independente para composições sem rosto: apenas mão, braço, pernas, pés, costas ou selfie sem
-              rosto. O prompt aqui é construído do zero, exclusivamente com as opções desta página — nunca com dados
-              do Prompt Studio principal.
-            </p>
-          </div>
-          <Link
-            href="/"
-            className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
-          >
-            ← Prompt Studio
-          </Link>
+        <header>
+          <h1 className="text-2xl font-semibold text-neutral-50">🕶️ Enquadramento Anônimo</h1>
+          <p className="mt-1 max-w-2xl text-sm text-neutral-400">
+            Página independente para composições sem rosto: apenas mão, braço, pernas, pés, costas ou selfie sem
+            rosto. O prompt aqui é construído do zero, exclusivamente com as opções desta página — nunca com dados
+            do Prompt Studio principal.
+          </p>
         </header>
 
         {loadedConfiguration && (

@@ -385,12 +385,6 @@ export function PromptStudio() {
           </div>
           <div className="flex shrink-0 gap-2">
             <Link
-              href="/enquadramento-anonimo"
-              className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
-            >
-              🕶️ Enquadramento Anônimo →
-            </Link>
-            <Link
               href="/library"
               className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
             >
