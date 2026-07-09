@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { TextInput, SelectField } from "@/components/ui/Field";
 import { CONFIGURATION_TYPE_OPTIONS, ConfigurationDetail, ConfigurationType } from "@/types/configuration";
 import { LOAD_CONFIGURATION_KEY } from "@/components/PromptStudio";
+import { LOAD_ANONYMOUS_CONFIGURATION_KEY } from "@/components/AnonymousFramingStudio";
 import { ConfigurationDetailModal } from "@/components/configurations/ConfigurationDetailModal";
 import { EditConfigurationModal } from "@/components/configurations/EditConfigurationModal";
 
@@ -40,6 +41,11 @@ export function ConfigurationsLibrary() {
   }
 
   function applyConfiguration(config: ConfigurationDetail) {
+    if (config.type === "anonimo") {
+      window.sessionStorage.setItem(LOAD_ANONYMOUS_CONFIGURATION_KEY, JSON.stringify(config));
+      router.push("/enquadramento-anonimo");
+      return;
+    }
     window.sessionStorage.setItem(LOAD_CONFIGURATION_KEY, JSON.stringify(config));
     router.push("/");
   }
@@ -135,7 +141,7 @@ export function ConfigurationsLibrary() {
                   onClick={() => applyConfiguration(item)}
                   className="col-span-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-500 px-2 py-1.5 text-[11px] font-semibold text-white"
                 >
-                  Aplicar no Prompt Studio
+                  {item.type === "anonimo" ? "Aplicar no Enquadramento Anônimo" : "Aplicar no Prompt Studio"}
                 </button>
                 <button
                   type="button"

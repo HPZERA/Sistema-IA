@@ -2,6 +2,7 @@ import { boolean, integer, jsonb, numeric, pgTable, text, timestamp } from "driz
 import { sql } from "drizzle-orm";
 import { AIModel } from "@/types/aiProvider";
 import { PromptFormState } from "@/types/formState";
+import { AnonymousFramingState } from "@/types/anonymousFraming";
 
 export const aiProviders = pgTable("ai_providers", {
   id: text("id").primaryKey(),
@@ -43,13 +44,15 @@ export const generations = pgTable("generations", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const configurationTypeValues = ["personagem", "look", "cena", "campanha", "outro"] as const;
+export const configurationTypeValues = ["personagem", "look", "cena", "campanha", "anonimo", "outro"] as const;
 export type ConfigurationType = (typeof configurationTypeValues)[number];
 
 // A manually-saved, complete snapshot of everything the user assembled in the Prompt Studio
-// (character, wardrobe, scenario, pose, framing, face visibility, anonymous framing, lighting,
-// camera, style, the typed/generated prompt, and the AI model used) — reapplied with one click
-// from "Minhas Configurações". Replaces the old, narrower `templates` + `favorites` tables.
+// (character, wardrobe, scenario, pose, framing, face visibility, lighting, camera, style, the
+// typed/generated prompt, and the AI model used) — reapplied with one click from "Minhas
+// Configurações". Replaces the old, narrower `templates` + `favorites` tables. `type: "anonimo"`
+// rows instead hold a standalone snapshot from the separate Enquadramento Anônimo page
+// (src/types/anonymousFraming.ts) — never a PromptFormState.
 export const configurations = pgTable("configurations", {
   id: text("id")
     .primaryKey()
@@ -59,7 +62,7 @@ export const configurations = pgTable("configurations", {
   description: text("description").notNull().default(""),
   coverImageUrl: text("cover_image_url"),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
-  formSnapshot: jsonb("form_snapshot").$type<PromptFormState>().notNull(),
+  formSnapshot: jsonb("form_snapshot").$type<PromptFormState | AnonymousFramingState>().notNull(),
   prompt: text("prompt").notNull().default(""),
   negativePrompt: text("negative_prompt").notNull().default(""),
   providerId: text("provider_id"),

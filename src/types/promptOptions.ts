@@ -341,6 +341,29 @@ export const ANONYMOUS_HAND_DETAIL_OPTIONS: Option[] = [
   { value: "natural light on skin", label: "Luz natural na pele" },
 ];
 
+// Lighting presets exclusive to the Enquadramento Anônimo page (src/lib/anonymousFraming.ts) —
+// candid/lifestyle wording distinct from the editorial STYLE/LIGHTING_OPTIONS above.
+export const ANONYMOUS_LIGHTING_OPTIONS: Option[] = [
+  { value: "soft natural daylight", label: "Luz natural" },
+  { value: "warm golden hour sunlight", label: "Golden hour" },
+  { value: "direct on-camera flash lighting", label: "Flash" },
+  { value: "moody bar lighting", label: "Luz de bar" },
+  { value: "low-light nighttime ambiance", label: "Luz noturna" },
+  { value: "soft natural window light", label: "Luz de janela" },
+];
+
+// Camera/lens descriptors exclusive to the Enquadramento Anônimo page — mixes device, focal
+// length and framing terms since candid anonymous shots are described that way in practice.
+export const ANONYMOUS_CAMERA_OPTIONS: Option[] = [
+  { value: "shot on smartphone", label: "Smartphone" },
+  { value: "shot on DSLR camera", label: "DSLR" },
+  { value: "50mm lens", label: "50mm" },
+  { value: "85mm lens", label: "85mm" },
+  { value: "close-up framing", label: "Close-up" },
+  { value: "macro framing", label: "Macro" },
+  { value: "shallow depth of field", label: "Profundidade de campo" },
+];
+
 export const MODEL_PROVIDER_OPTIONS: Option[] = [
   { value: "flux-dev", label: "FLUX.1 [dev] — alta qualidade" },
   { value: "flux-schnell", label: "FLUX.1 [schnell] — rápido" },

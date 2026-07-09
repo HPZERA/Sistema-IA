@@ -4,7 +4,6 @@ import { PHOTOGRAPHY_STANDARD_CLAUSE, PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS } from
 import { buildLibraryEnrichment, mergeLibrarySelections } from "@/lib/libraryPrompt";
 import { buildCharacterEnrichment } from "@/lib/characterPrompt";
 import { buildFaceVisibilityNegativeTerms, buildFaceVisibilityPositiveClause } from "@/lib/faceVisibility";
-import { buildAnonymousFramingNegativeTerms, buildAnonymousFramingPrompt, isAnonymousFramingActive } from "@/lib/anonymousFraming";
 import { LibraryModule } from "@/types/library";
 import { CharacterProfile } from "@/types/character";
 
@@ -48,22 +47,6 @@ export function buildNaturalLanguagePrompt(
 ): string {
   const libraryEnrichment = libraryEnrichmentFor(state, libraries);
   const characterEnrichment = buildCharacterEnrichment(character);
-
-  // The "Enquadramento Anônimo" module takes priority over the standard full-body
-  // subject/wardrobe/pose sentence below — otherwise a "somente mão"/"somente braço" selection
-  // would still describe a full body in frame alongside the anonymity clauses.
-  if (isAnonymousFramingActive(state)) {
-    const cameraAngle = joinSelectionWithCustom(state.cameraAngle, state.cameraAngleCustom);
-    const sentence = [
-      `${buildAnonymousFramingPrompt(state)}.`,
-      cameraAngle || state.lens ? `Shot at ${joinNonEmpty([cameraAngle, state.lens])}.` : "",
-      state.lighting ? `Lit by ${state.lighting}.` : "",
-      joinNonEmpty([state.style, state.realism]) ? `${joinNonEmpty([state.style, state.realism])}.` : "",
-      libraryEnrichment ? `Additional details: ${libraryEnrichment}.` : "",
-      characterEnrichment ? `Character identity: ${characterEnrichment}.` : "",
-    ].join(" ");
-    return sentence.replace(/\s+/g, " ").trim();
-  }
 
   const bodyType = joinSelectionWithCustom(state.bodyType, state.bodyTypeCustom);
   const hair = joinSelectionWithCustom(state.hair, state.hairCustom);
@@ -117,23 +100,6 @@ export function buildTagStylePrompt(
   libraries: LibraryModule[] = [],
   character?: CharacterProfile
 ): string {
-  // Same override priority as buildNaturalLanguagePrompt above: an active "Enquadramento
-  // Anônimo" module replaces the full-body subject/wardrobe/pose tags entirely.
-  if (isAnonymousFramingActive(state)) {
-    const tags = [
-      buildAnonymousFramingPrompt(state),
-      ...state.cameraAngle,
-      state.cameraAngleCustom,
-      state.lens,
-      state.lighting,
-      state.style,
-      state.realism,
-      libraryEnrichmentFor(state, libraries),
-      buildCharacterEnrichment(character),
-    ];
-    return tags.map((t) => t?.trim()).filter(Boolean).join(", ");
-  }
-
   const tags = [
     ageDescriptor(state.age),
     state.gender,
@@ -183,16 +149,11 @@ export function buildPromptForProvider(
 }
 
 export function buildNegativePrompt(state?: PromptFormState, userNegativeExtra?: string): string {
-  // PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS forbids "cropped limbs/hands/feet, awkward cropping" —
-  // that directly fights the Enquadramento Anônimo module, which deliberately crops to a hand,
-  // arm, or legs-only shot, so it's dropped while that module is active.
-  const anonymousActive = state ? isAnonymousFramingActive(state) : false;
   return joinNonEmpty([
     MANDATORY_SAFETY_NEGATIVE_TERMS,
     BASE_QUALITY_NEGATIVE_TERMS,
-    anonymousActive ? "" : PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS,
+    PHOTOGRAPHY_STANDARD_NEGATIVE_TERMS,
     state ? buildFaceVisibilityNegativeTerms(state) : "",
-    state ? buildAnonymousFramingNegativeTerms(state) : "",
     userNegativeExtra,
   ]);
 }

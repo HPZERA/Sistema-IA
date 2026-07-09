@@ -1,14 +1,9 @@
-import { PromptFormState } from "@/types/formState";
+import { AnonymousFramingState } from "@/types/anonymousFraming";
 import { FACE_ANONYMITY_POSITIVE_CLAUSES } from "@/lib/faceVisibility";
+import { MANDATORY_SAFETY_NEGATIVE_TERMS } from "@/lib/safety";
 
 function joinNonEmpty(parts: (string | undefined | null)[], sep = ", "): string {
   return parts.map((p) => p?.trim()).filter(Boolean).join(sep);
-}
-
-/** Master switch for the "Enquadramento Anônimo" module — everything below only reaches the
- * final prompt when this is on, so the module stays purely additive to every other field. */
-export function isAnonymousFramingActive(state: PromptFormState): boolean {
-  return state.anonymousFramingEnabled;
 }
 
 interface FramingRule {
@@ -156,22 +151,19 @@ function environmentPhrase(environment: string): string {
 }
 
 /**
- * Builds the standalone override prompt for the "Enquadramento Anônimo" module from every field
- * it exposes: pessoa, ambiente, tipo(s) de enquadramento, objeto em foco, descrição personalizada
- * e força de ocultação do rosto. When the module is active this sentence takes priority over the
- * standard full-body subject/wardrobe/pose description (see buildNaturalLanguagePrompt and
- * buildTagStylePrompt in src/lib/promptBuilder.ts), so choosing "apenas mão", "apenas braço",
- * "apenas pernas" or "do joelho para baixo" can never still render a full body in frame.
+ * Builds the entire prompt for the "Enquadramento Anônimo" page from every field it exposes:
+ * pessoa, parte visível, objeto em foco, ambiente, detalhes da mão/braço, iluminação, câmera and
+ * prompt personalizado (src/types/anonymousFraming.ts). Pure function of that state alone — it
+ * never reads anything from the main Prompt Studio (src/lib/promptBuilder.ts).
  */
-export function buildAnonymousFramingPrompt(state: PromptFormState): string {
-  if (!isAnonymousFramingActive(state)) return "";
+export function buildAnonymousFramingPrompt(state: AnonymousFramingState): string {
+  const person = state.person || "adult person";
+  const environment = state.environment;
+  const focusObject = joinNonEmpty([...state.focusObject, state.focusObjectCustom]);
+  const handDetails = joinNonEmpty([...state.handDetails, state.handDetailsCustom]);
+  const cameraDetails = joinNonEmpty(state.camera);
 
-  const person = state.anonymousPerson || "adult person";
-  const environment = state.anonymousEnvironment;
-  const focusObject = joinNonEmpty([...state.anonymousFocusObject, state.anonymousFocusObjectCustom]);
-  const handDetails = joinNonEmpty([...state.anonymousHandDetails, state.anonymousHandDetailsCustom]);
-
-  const selectedTypes = state.anonymousFramingType;
+  const selectedTypes = state.framingType;
   const rules = selectedTypes.length
     ? selectedTypes.map((t) => FRAMING_RULES[t] ?? DEFAULT_FRAMING_RULE)
     : [DEFAULT_FRAMING_RULE];
@@ -181,14 +173,6 @@ export function buildAnonymousFramingPrompt(state: PromptFormState): string {
   const objectClause = focusObject ? (holdsObject ? `holding ${focusObject}` : `featuring ${focusObject}`) : "";
   const exclusions = Array.from(new Set(rules.flatMap((r) => r.exclusions)));
 
-  const concealment = state.faceConcealmentStrength;
-  const concealmentClause =
-    concealment === "absolute"
-      ? "identity completely unrecognizable, face permanently excluded from the frame"
-      : concealment === "strong"
-      ? "strong emphasis on keeping the face fully out of frame"
-      : "";
-
   return joinNonEmpty([
     `Ultra-realistic anonymous lifestyle photograph of an ${person}${environment ? ` ${environmentPhrase(environment)}` : ""}`,
     crop || objectClause ? `showing ${joinNonEmpty([crop, objectClause])}` : "",
@@ -196,23 +180,23 @@ export function buildAnonymousFramingPrompt(state: PromptFormState): string {
     joinNonEmpty(exclusions),
     FACE_ANONYMITY_POSITIVE_CLAUSES.join(", "),
     "no body above the selected crop",
-    concealmentClause,
     handDetails,
-    state.anonymousCustomDescription,
-    "natural sunlight, shallow depth of field, authentic smartphone photography, natural color grading, photorealistic",
+    state.lighting,
+    cameraDetails,
+    state.customPrompt,
+    "photorealistic, authentic smartphone photography, natural color grading",
   ]);
 }
 
-/** Negative-prompt terms enforced whenever the module is active, regardless of which framing
- * type is selected — stricter than the shared face-visibility terms (src/lib/faceVisibility.ts)
- * since this module can also hide the head/torso, not just the face. */
+/** Fixed negative-prompt terms for the Enquadramento Anônimo page — always the same regardless of
+ * which fields are selected, so the model never renders a face, extra body parts or AI artifacts. */
 export const ANONYMOUS_FRAMING_NEGATIVE_TERMS =
-  "visible face, eyes, facial features, head, full face, front-facing portrait, eye contact, facial reflection, mirror face reflection, profile face, recognizable identity";
+  "visible face, eyes, facial features, head, torso, full body, portrait, front-facing person, profile face, face reflection, mirror reflection, recognizable identity, extra fingers, deformed hand, bad anatomy, plastic skin, waxy skin, oversaturated colors, AI-looking image";
 
-/** Negative-prompt terms enforcing anonymity — only contributed while the module is active. */
-export function buildAnonymousFramingNegativeTerms(state: PromptFormState): string {
-  if (!isAnonymousFramingActive(state)) return "";
-  return ANONYMOUS_FRAMING_NEGATIVE_TERMS;
+/** Full negative prompt for this page: the fixed anonymity/quality terms above plus the app-wide
+ * mandatory safety terms (nudity, minors, ...) — never the main Prompt Studio's negative prompt. */
+export function buildAnonymousFramingNegativePrompt(): string {
+  return joinNonEmpty([MANDATORY_SAFETY_NEGATIVE_TERMS, ANONYMOUS_FRAMING_NEGATIVE_TERMS]);
 }
 
 export interface AnonymousFramingPreset {
@@ -223,8 +207,7 @@ export interface AnonymousFramingPreset {
   environment: string;
 }
 
-// Ready-made examples from the product spec — applying one fills every category at once and
-// switches the module on.
+// Ready-made examples from the product spec — applying one fills every category at once.
 export const ANONYMOUS_FRAMING_PRESETS: AnonymousFramingPreset[] = [
   {
     label: "Mulher adulta na praia segurando um copo, mostrando apenas braço, mão e copo.",

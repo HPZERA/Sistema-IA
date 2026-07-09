@@ -2,6 +2,8 @@
 
 import { Modal } from "@/components/ui/Modal";
 import { CONFIGURATION_TYPE_OPTIONS, ConfigurationDetail } from "@/types/configuration";
+import { PromptFormState } from "@/types/formState";
+import { AnonymousFramingState } from "@/types/anonymousFraming";
 
 function typeLabel(type: string) {
   return CONFIGURATION_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? type;
@@ -16,7 +18,7 @@ export function ConfigurationDetailModal({
   onApply: (configuration: ConfigurationDetail) => void;
   onClose: () => void;
 }) {
-  const { formSnapshot: form } = configuration;
+  const isAnonymous = configuration.type === "anonimo";
 
   return (
     <Modal title={configuration.name} onClose={onClose} wide>
@@ -44,35 +46,11 @@ export function ConfigurationDetailModal({
 
         {configuration.description && <p className="text-sm text-neutral-300">{configuration.description}</p>}
 
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-white/10 bg-neutral-900/60 p-3 text-xs">
-          <dt className="text-neutral-500">Gênero / idade</dt>
-          <dd className="text-neutral-200">
-            {form.gender} · {form.age} anos
-          </dd>
-          <dt className="text-neutral-500">Corpo</dt>
-          <dd className="text-neutral-200">{form.bodyType.join(", ") || "—"}</dd>
-          <dt className="text-neutral-500">Roupas</dt>
-          <dd className="text-neutral-200">{form.wardrobeCategory.join(", ") || "—"}</dd>
-          <dt className="text-neutral-500">Cenário</dt>
-          <dd className="text-neutral-200">{form.scene || "—"}</dd>
-          <dt className="text-neutral-500">Pose</dt>
-          <dd className="text-neutral-200">{form.pose.join(", ") || "—"}</dd>
-          <dt className="text-neutral-500">Câmera</dt>
-          <dd className="text-neutral-200">{form.cameraAngle.join(", ") || "—"}</dd>
-          <dt className="text-neutral-500">Iluminação</dt>
-          <dd className="text-neutral-200">{form.lighting || "—"}</dd>
-          <dt className="text-neutral-500">Estilo</dt>
-          <dd className="text-neutral-200">{form.style || "—"}</dd>
-          <dt className="text-neutral-500">Visibilidade do rosto</dt>
-          <dd className="text-neutral-200">{form.faceVisibility || "—"}</dd>
-          <dt className="text-neutral-500">Enquadramento anônimo</dt>
-          <dd className="text-neutral-200">{form.anonymousFramingEnabled ? "Ativo" : "Inativo"}</dd>
-          <dt className="text-neutral-500">IA utilizada</dt>
-          <dd className="text-neutral-200">
-            {configuration.providerName ?? "—"}
-            {configuration.modelLabel ? ` · ${configuration.modelLabel}` : ""}
-          </dd>
-        </dl>
+        {isAnonymous ? (
+          <AnonymousSummary snapshot={configuration.formSnapshot as AnonymousFramingState} configuration={configuration} />
+        ) : (
+          <MainStudioSummary snapshot={configuration.formSnapshot as PromptFormState} configuration={configuration} />
+        )}
 
         <div className="flex flex-col gap-2">
           <span className="text-xs font-medium text-neutral-300">Prompt final</span>
@@ -95,9 +73,67 @@ export function ConfigurationDetailModal({
           onClick={() => onApply(configuration)}
           className="rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-xs font-semibold text-white"
         >
-          Aplicar no Prompt Studio
+          {isAnonymous ? "Aplicar no Enquadramento Anônimo" : "Aplicar no Prompt Studio"}
         </button>
       </div>
     </Modal>
+  );
+}
+
+function MainStudioSummary({ snapshot: form, configuration }: { snapshot: PromptFormState; configuration: ConfigurationDetail }) {
+  return (
+    <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-white/10 bg-neutral-900/60 p-3 text-xs">
+      <dt className="text-neutral-500">Gênero / idade</dt>
+      <dd className="text-neutral-200">
+        {form.gender} · {form.age} anos
+      </dd>
+      <dt className="text-neutral-500">Corpo</dt>
+      <dd className="text-neutral-200">{form.bodyType.join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">Roupas</dt>
+      <dd className="text-neutral-200">{form.wardrobeCategory.join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">Cenário</dt>
+      <dd className="text-neutral-200">{form.scene || "—"}</dd>
+      <dt className="text-neutral-500">Pose</dt>
+      <dd className="text-neutral-200">{form.pose.join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">Câmera</dt>
+      <dd className="text-neutral-200">{form.cameraAngle.join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">Iluminação</dt>
+      <dd className="text-neutral-200">{form.lighting || "—"}</dd>
+      <dt className="text-neutral-500">Estilo</dt>
+      <dd className="text-neutral-200">{form.style || "—"}</dd>
+      <dt className="text-neutral-500">Visibilidade do rosto</dt>
+      <dd className="text-neutral-200">{form.faceVisibility || "—"}</dd>
+      <dt className="text-neutral-500">IA utilizada</dt>
+      <dd className="text-neutral-200">
+        {configuration.providerName ?? "—"}
+        {configuration.modelLabel ? ` · ${configuration.modelLabel}` : ""}
+      </dd>
+    </dl>
+  );
+}
+
+function AnonymousSummary({ snapshot: form, configuration }: { snapshot: AnonymousFramingState; configuration: ConfigurationDetail }) {
+  return (
+    <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-white/10 bg-neutral-900/60 p-3 text-xs">
+      <dt className="text-neutral-500">Pessoa</dt>
+      <dd className="text-neutral-200">{form.person || "—"}</dd>
+      <dt className="text-neutral-500">Parte visível</dt>
+      <dd className="text-neutral-200">{form.framingType.join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">Objeto em foco</dt>
+      <dd className="text-neutral-200">{[...form.focusObject, form.focusObjectCustom].filter(Boolean).join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">Ambiente</dt>
+      <dd className="text-neutral-200">{form.environment || "—"}</dd>
+      <dt className="text-neutral-500">Detalhes da mão/braço</dt>
+      <dd className="text-neutral-200">{[...form.handDetails, form.handDetailsCustom].filter(Boolean).join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">Iluminação</dt>
+      <dd className="text-neutral-200">{form.lighting || "—"}</dd>
+      <dt className="text-neutral-500">Câmera</dt>
+      <dd className="text-neutral-200">{form.camera.join(", ") || "—"}</dd>
+      <dt className="text-neutral-500">IA utilizada</dt>
+      <dd className="text-neutral-200">
+        {configuration.providerName ?? "—"}
+        {configuration.modelLabel ? ` · ${configuration.modelLabel}` : ""}
+      </dd>
+    </dl>
   );
 }

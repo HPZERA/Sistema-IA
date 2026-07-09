@@ -7,11 +7,6 @@ import { ChipMultiSelect } from "@/components/ui/ChipMultiSelect";
 import { LibraryModules } from "@/components/library/LibraryModules";
 import {
   ACCESSORY_OPTIONS,
-  ANONYMOUS_ENVIRONMENT_OPTIONS,
-  ANONYMOUS_FOCUS_OBJECT_OPTIONS,
-  ANONYMOUS_FRAMING_TYPE_OPTIONS,
-  ANONYMOUS_HAND_DETAIL_OPTIONS,
-  ANONYMOUS_PERSON_OPTIONS,
   ASPECT_RATIO_OPTIONS,
   BODY_TYPE_OPTIONS,
   CAMERA_ANGLE_OPTIONS,
@@ -35,7 +30,6 @@ import {
   WARDROBE_CATEGORY_OPTIONS,
 } from "@/types/promptOptions";
 import { faceVisibilityHidesFace } from "@/lib/faceVisibility";
-import { ANONYMOUS_FRAMING_PRESETS, AnonymousFramingPreset } from "@/lib/anonymousFraming";
 import { DEFAULT_FORM_STATE, PromptFormState, ProviderId } from "@/types/formState";
 import { buildNegativePrompt, buildPromptForProvider } from "@/lib/promptBuilder";
 import { MAX_AGE, MIN_AGE, validateSubmission } from "@/lib/safety";
@@ -111,12 +105,6 @@ export function PromptStudio() {
   const [libraries, setLibraries] = useState<Record<LibraryKey, LibraryModule[]>>(EMPTY_LIBRARIES);
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
 
-  const [anonymousFramingOpen, setAnonymousFramingOpen] = useState(false);
-  // Tracks whether the user has picked any option inside the Enquadramento Anônimo module since
-  // it was last turned on — while false, the auto-built prompt is kept blank instead of showing
-  // the module's default/empty-selection sentence.
-  const [anonymousOptionsTouched, setAnonymousOptionsTouched] = useState(false);
-
   const [showSaveConfiguration, setShowSaveConfiguration] = useState(false);
   const [loadedConfiguration, setLoadedConfiguration] = useState<LoadedConfiguration | null>(null);
 
@@ -171,7 +159,7 @@ export function PromptStudio() {
     window.sessionStorage.removeItem(LOAD_CONFIGURATION_KEY);
     try {
       const payload: ConfigurationDetail = JSON.parse(raw);
-      setForm(payload.formSnapshot);
+      setForm(payload.formSnapshot as PromptFormState);
       setPrompt(payload.prompt);
       setNegativePrompt(payload.negativePrompt);
       setPromptTouched(true);
@@ -217,12 +205,8 @@ export function PromptStudio() {
   // manually edited the textarea (in which case they must hit "Sincronizar" to overwrite it).
   useEffect(() => {
     if (promptTouched) return;
-    if (form.anonymousFramingEnabled && !anonymousOptionsTouched) {
-      setPrompt("");
-      return;
-    }
     setPrompt(buildPromptForProvider(form, allLibraryModules, selectedCharacter));
-  }, [form, promptTouched, allLibraryModules, selectedCharacter, anonymousOptionsTouched]);
+  }, [form, promptTouched, allLibraryModules, selectedCharacter]);
 
   const clientSafetyCheck = useMemo(
     () =>
@@ -240,9 +224,6 @@ export function PromptStudio() {
           "pose (personalizada)": form.poseCustom,
           "ângulo de câmera (personalizado)": form.cameraAngleCustom,
           "expressão facial (personalizada)": form.expressionCustom,
-          "objeto em foco (personalizado)": form.anonymousFocusObjectCustom,
-          "detalhes da mão/braço (personalizado)": form.anonymousHandDetailsCustom,
-          "enquadramento anônimo (descrição personalizada)": form.anonymousCustomDescription,
           "prompt editado": prompt,
           "personagem (observações)": selectedCharacter?.notes,
           "personagem (estilo)": selectedCharacter?.style,
@@ -252,9 +233,6 @@ export function PromptStudio() {
   );
 
   function update<K extends keyof PromptFormState>(key: K, value: PromptFormState[K]) {
-    if (typeof key === "string" && key.startsWith("anonymous") && key !== "anonymousFramingEnabled") {
-      setAnonymousOptionsTouched(true);
-    }
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -267,31 +245,9 @@ export function PromptStudio() {
     }));
   }
 
-  type ChipField =
-    | "bodyType"
-    | "hair"
-    | "wardrobeCategory"
-    | "pose"
-    | "cameraAngle"
-    | "expression"
-    | "anonymousFramingType"
-    | "anonymousFocusObject"
-    | "anonymousHandDetails";
+  type ChipField = "bodyType" | "hair" | "wardrobeCategory" | "pose" | "cameraAngle" | "expression";
 
   function toggleChipField(key: ChipField, value: string) {
-    if (key === "anonymousFramingType" || key === "anonymousFocusObject" || key === "anonymousHandDetails") {
-      setAnonymousOptionsTouched(true);
-    }
-    // "Tipo de enquadramento" is exclusive: clicking a crop marks only that one, instead of
-    // accumulating previously-clicked crops (which produced contradictory prompts, e.g. "only
-    // hand visible" + "photographed from behind" at once).
-    if (key === "anonymousFramingType") {
-      setForm((prev) => ({
-        ...prev,
-        anonymousFramingType: prev.anonymousFramingType.includes(value) ? [] : [value],
-      }));
-      return;
-    }
     setForm((prev) => ({
       ...prev,
       [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value],
@@ -312,20 +268,6 @@ export function PromptStudio() {
     }));
   }
 
-  function applyAnonymousFramingPreset(preset: AnonymousFramingPreset) {
-    setAnonymousOptionsTouched(true);
-    setForm((prev) => ({
-      ...prev,
-      anonymousFramingEnabled: true,
-      anonymousFramingType: preset.framingType,
-      anonymousFocusObject: preset.focusObject,
-      anonymousFocusObjectCustom: "",
-      anonymousEnvironment: preset.environment,
-      anonymousPerson: preset.person,
-    }));
-    setAnonymousFramingOpen(true);
-  }
-
   function toggleLibraryOption(libraryKey: LibraryKey, moduleId: string, optionId: string) {
     const field = LIBRARY_SELECTION_FIELD[libraryKey];
     setForm((prev) => {
@@ -341,11 +283,7 @@ export function PromptStudio() {
   }
 
   function resyncPromptFromFields() {
-    setPrompt(
-      form.anonymousFramingEnabled && !anonymousOptionsTouched
-        ? ""
-        : buildPromptForProvider(form, allLibraryModules, selectedCharacter)
-    );
+    setPrompt(buildPromptForProvider(form, allLibraryModules, selectedCharacter));
     setNegativePrompt(buildNegativePrompt(form));
     setPromptTouched(false);
   }
@@ -388,9 +326,8 @@ export function PromptStudio() {
     await navigator.clipboard.writeText(prompt);
   }
 
-  // Shared editor fields (Prompt / Prompt negativo / Sincronizar / Copiar) reused by both the
-  // main "Prompt gerado" panel and the dedicated one inside Enquadramento Anônimo — both read
-  // and write the same `prompt`/`negativePrompt` state, there is only ever one prompt.
+  // Shared editor fields (Prompt / Prompt negativo / Sincronizar / Copiar) for the main "Prompt
+  // gerado" panel.
   function renderPromptEditorFields() {
     return (
       <>
@@ -398,11 +335,6 @@ export function PromptStudio() {
           <TextArea
             rows={8}
             value={prompt}
-            placeholder={
-              form.anonymousFramingEnabled && !anonymousOptionsTouched
-                ? "Enquadramento Anônimo ativo — selecione as opções do módulo (parte visível, objeto, ambiente...) para gerar o prompt."
-                : undefined
-            }
             onChange={(v) => {
               setPrompt(v);
               setPromptTouched(true);
@@ -452,6 +384,12 @@ export function PromptStudio() {
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
+            <Link
+              href="/enquadramento-anonimo"
+              className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
+            >
+              🕶️ Enquadramento Anônimo →
+            </Link>
             <Link
               href="/library"
               className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
@@ -677,136 +615,6 @@ export function PromptStudio() {
         </Section>
 
         <Section
-          title="🕶️ Enquadramento Anônimo"
-          description="Módulo dedicado a composições sem rosto: mostra apenas partes do corpo, objetos ou ângulos anônimos. Quando ativo, ele tem prioridade sobre o enquadramento padrão de corpo inteiro (Roupas e Pose deixam de aparecer no prompt), mas continua respeitando Câmera, Iluminação e Realismo."
-        >
-          <div className="col-span-full flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-neutral-900/60 px-3 py-2.5">
-            <label className="flex items-center gap-2.5 text-sm text-neutral-200">
-              <input
-                type="checkbox"
-                checked={form.anonymousFramingEnabled}
-                onChange={(e) => {
-                  update("anonymousFramingEnabled", e.target.checked);
-                  setAnonymousOptionsTouched(false);
-                  // Activating/deactivating the module is a deliberate reset: force the prompt to
-                  // rebuild immediately (blank when turning on, full-body when turning off), even
-                  // if the user had manually edited the textarea or loaded a saved prompt before.
-                  setPromptTouched(false);
-                  if (e.target.checked) setAnonymousFramingOpen(true);
-                }}
-              />
-              <span className="font-medium">Ativar Enquadramento Anônimo</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => setAnonymousFramingOpen((v) => !v)}
-              className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-2.5 py-1 text-xs text-neutral-300 hover:border-white/25"
-            >
-              {anonymousFramingOpen ? "Ocultar opções ▲" : "Configurar opções ▼"}
-            </button>
-          </div>
-
-          {form.anonymousFramingEnabled && (
-            <p className="col-span-full rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[11px] text-emerald-300">
-              Ativo: o sistema adiciona automaticamente instruções de anonimato ao prompt positivo e negativo (sem
-              rosto, olhos, contato visual, características faciais ou reflexo do rosto visíveis; identidade não
-              reconhecível).
-            </p>
-          )}
-
-          {anonymousFramingOpen && (
-            <>
-              <Field label="Pessoa">
-                <SelectField
-                  value={form.anonymousPerson}
-                  onChange={(v) => update("anonymousPerson", v)}
-                  options={ANONYMOUS_PERSON_OPTIONS}
-                />
-              </Field>
-              <Field label="Ambiente">
-                <SelectField
-                  value={form.anonymousEnvironment}
-                  onChange={(v) => update("anonymousEnvironment", v)}
-                  options={ANONYMOUS_ENVIRONMENT_OPTIONS}
-                />
-              </Field>
-
-              <Field label="Tipo de enquadramento" full hint="Selecione uma opção de composição sem rosto — clicar em outra troca a seleção.">
-                <ChipMultiSelect
-                  options={ANONYMOUS_FRAMING_TYPE_OPTIONS}
-                  selected={form.anonymousFramingType}
-                  onToggle={(v) => toggleChipField("anonymousFramingType", v)}
-                />
-              </Field>
-
-              <Field label="Objeto em foco" full>
-                <ChipMultiSelect
-                  options={ANONYMOUS_FOCUS_OBJECT_OPTIONS}
-                  selected={form.anonymousFocusObject}
-                  onToggle={(v) => toggleChipField("anonymousFocusObject", v)}
-                />
-              </Field>
-              <Field label="Objeto em foco (personalizado)" full>
-                <TextInput
-                  value={form.anonymousFocusObjectCustom}
-                  onChange={(v) => update("anonymousFocusObjectCustom", v)}
-                  placeholder="ex: colar de pérolas"
-                />
-              </Field>
-
-              <Field label="Detalhes da mão/braço" full hint="Só entram no prompt se selecionados aqui.">
-                <ChipMultiSelect
-                  options={ANONYMOUS_HAND_DETAIL_OPTIONS}
-                  selected={form.anonymousHandDetails}
-                  onToggle={(v) => toggleChipField("anonymousHandDetails", v)}
-                />
-              </Field>
-              <Field label="Detalhes da mão/braço (personalizado)" full>
-                <TextInput
-                  value={form.anonymousHandDetailsCustom}
-                  onChange={(v) => update("anonymousHandDetailsCustom", v)}
-                  placeholder="ex: aliança de casamento"
-                />
-              </Field>
-              <Field label="Descrição personalizada" full>
-                <TextArea
-                  value={form.anonymousCustomDescription}
-                  onChange={(v) => update("anonymousCustomDescription", v)}
-                  placeholder="opcional: detalhes extras adicionados ao final do enquadramento anônimo"
-                />
-              </Field>
-
-              <div className="col-span-full flex flex-col gap-1.5 border-t border-white/10 pt-3">
-                <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                  Exemplos prontos
-                </span>
-                <div className="flex flex-col gap-1.5">
-                  {ANONYMOUS_FRAMING_PRESETS.map((preset) => (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => applyAnonymousFramingPreset(preset)}
-                      className="rounded-lg border border-white/10 bg-neutral-900/60 px-3 py-1.5 text-left text-xs text-neutral-300 hover:border-fuchsia-400/50 hover:text-neutral-100"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </Section>
-
-        {form.anonymousFramingEnabled && (
-          <Section
-            title="🕶️ Prompt Gerado — Enquadramento Anônimo"
-            description="Prompt exclusivo deste módulo: construído somente com pessoa, parte visível, objeto em foco, ambiente, detalhes de mão/braço, câmera, iluminação e estilo selecionados acima. Nenhum dado de personagem, roupa, cenário ou pose padrão entra aqui."
-          >
-            {renderPromptEditorFields()}
-          </Section>
-        )}
-
-        <Section
           title="Visibilidade do Rosto"
           description="Define se e como o rosto aparece na imagem. Ao escolher uma opção 'sem rosto', o sistema adiciona automaticamente instruções de anonimato ao prompt final (positivo e negativo)."
         >
@@ -851,22 +659,12 @@ export function PromptStudio() {
       </div>
 
       <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
-        {form.anonymousFramingEnabled ? (
-          <Section title="Prompt gerado">
-            <p className="col-span-full text-xs text-neutral-400">
-              Enquadramento Anônimo ativo — edite o prompt na aba{" "}
-              <strong className="text-neutral-200">🕶️ Prompt Gerado — Enquadramento Anônimo</strong>, logo acima do
-              módulo, na coluna principal.
-            </p>
-          </Section>
-        ) : (
-          <Section
-            title="Prompt gerado"
-            description="Editável antes da geração. O padrão fotográfico (realismo, corpo visível em quadro, textura de pele natural, sem marca d'água) é sempre aplicado automaticamente ao final do prompt."
-          >
-            {renderPromptEditorFields()}
-          </Section>
-        )}
+        <Section
+          title="Prompt gerado"
+          description="Editável antes da geração. O padrão fotográfico (realismo, corpo visível em quadro, textura de pele natural, sem marca d'água) é sempre aplicado automaticamente ao final do prompt."
+        >
+          {renderPromptEditorFields()}
+        </Section>
 
         <Section title="Política de conteúdo">
           <label className="col-span-full flex items-start gap-2.5 text-xs text-neutral-300">
