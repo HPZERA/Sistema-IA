@@ -43,26 +43,31 @@ export const generations = pgTable("generations", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const favoriteTypeValues = ["prompt", "scenario"] as const;
-export type FavoriteType = (typeof favoriteTypeValues)[number];
+export const configurationTypeValues = ["personagem", "look", "cena", "campanha", "outro"] as const;
+export type ConfigurationType = (typeof configurationTypeValues)[number];
 
-export const favorites = pgTable("favorites", {
-  id: text("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  type: text("type").$type<FavoriteType>().notNull(),
-  name: text("name").notNull(),
-  payload: jsonb("payload").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export const templates = pgTable("templates", {
+// A manually-saved, complete snapshot of everything the user assembled in the Prompt Studio
+// (character, wardrobe, scenario, pose, framing, face visibility, anonymous framing, lighting,
+// camera, style, the typed/generated prompt, and the AI model used) — reapplied with one click
+// from "Minhas Configurações". Replaces the old, narrower `templates` + `favorites` tables.
+export const configurations = pgTable("configurations", {
   id: text("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
+  type: text("type").$type<ConfigurationType>().notNull().default("outro"),
+  description: text("description").notNull().default(""),
+  coverImageUrl: text("cover_image_url"),
+  tags: jsonb("tags").$type<string[]>().notNull().default([]),
   formSnapshot: jsonb("form_snapshot").$type<PromptFormState>().notNull(),
+  prompt: text("prompt").notNull().default(""),
+  negativePrompt: text("negative_prompt").notNull().default(""),
+  providerId: text("provider_id"),
+  providerName: text("provider_name"),
+  modelId: text("model_id"),
+  modelLabel: text("model_label"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // Universal Library system — every selectable category in the Prompt Studio (scenario, clothing,

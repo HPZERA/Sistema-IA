@@ -43,11 +43,13 @@ import { AIProviderConfigPublic, GenerationInfo } from "@/types/aiProvider";
 import { LIBRARY_KEYS, LibraryKey, LibraryModule } from "@/types/library";
 import { CharacterSummary } from "@/types/character";
 import Link from "next/link";
-import { SavedItemsPanel } from "@/components/SavedItemsPanel";
+import { SaveConfigurationModal } from "@/components/configurations/SaveConfigurationModal";
+import { ConfigurationDetail } from "@/types/configuration";
 
 type GeneratedImage = { url: string };
 
 const LOAD_GENERATION_KEY = "dark-brand:load-generation";
+export const LOAD_CONFIGURATION_KEY = "dark-brand:load-configuration";
 
 interface LoadGenerationPayload {
   formSnapshot?: PromptFormState;
@@ -57,6 +59,11 @@ interface LoadGenerationPayload {
   modelId?: string;
   autoGenerate?: boolean;
 }
+
+type LoadedConfiguration = Pick<
+  ConfigurationDetail,
+  "id" | "name" | "type" | "description" | "coverImageUrl" | "tags"
+>;
 
 type LibrarySelectionField = "scenarioModuleSelections" | "clothingSelections" | "poseSelections" | "cameraSelections" | "lightingSelections";
 
@@ -105,6 +112,13 @@ export function PromptStudio() {
   const [characters, setCharacters] = useState<CharacterSummary[]>([]);
 
   const [anonymousFramingOpen, setAnonymousFramingOpen] = useState(false);
+  // Tracks whether the user has picked any option inside the Enquadramento Anônimo module since
+  // it was last turned on — while false, the auto-built prompt is kept blank instead of showing
+  // the module's default/empty-selection sentence.
+  const [anonymousOptionsTouched, setAnonymousOptionsTouched] = useState(false);
+
+  const [showSaveConfiguration, setShowSaveConfiguration] = useState(false);
+  const [loadedConfiguration, setLoadedConfiguration] = useState<LoadedConfiguration | null>(null);
 
   async function refreshLibraries() {
     const res = await fetch("/api/libraries");
@@ -149,6 +163,33 @@ export function PromptStudio() {
     }
   }, []);
 
+  // Handoff from "Minhas Configurações" → Aplicar: load a manually-saved configuration's
+  // exact form/prompt/model back into the studio.
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem(LOAD_CONFIGURATION_KEY);
+    if (!raw) return;
+    window.sessionStorage.removeItem(LOAD_CONFIGURATION_KEY);
+    try {
+      const payload: ConfigurationDetail = JSON.parse(raw);
+      setForm(payload.formSnapshot);
+      setPrompt(payload.prompt);
+      setNegativePrompt(payload.negativePrompt);
+      setPromptTouched(true);
+      if (payload.providerId) setSelectedProviderId(payload.providerId);
+      if (payload.modelId) setSelectedModelId(payload.modelId);
+      setLoadedConfiguration({
+        id: payload.id,
+        name: payload.name,
+        type: payload.type,
+        description: payload.description,
+        coverImageUrl: payload.coverImageUrl,
+        tags: payload.tags,
+      });
+    } catch {
+      // ignore malformed handoff payloads
+    }
+  }, []);
+
   useEffect(() => {
     fetch("/api/ai-providers")
       .then((res) => res.json())
@@ -176,8 +217,12 @@ export function PromptStudio() {
   // manually edited the textarea (in which case they must hit "Sincronizar" to overwrite it).
   useEffect(() => {
     if (promptTouched) return;
+    if (form.anonymousFramingEnabled && !anonymousOptionsTouched) {
+      setPrompt("");
+      return;
+    }
     setPrompt(buildPromptForProvider(form, allLibraryModules, selectedCharacter));
-  }, [form, promptTouched, allLibraryModules, selectedCharacter]);
+  }, [form, promptTouched, allLibraryModules, selectedCharacter, anonymousOptionsTouched]);
 
   const clientSafetyCheck = useMemo(
     () =>
@@ -207,6 +252,9 @@ export function PromptStudio() {
   );
 
   function update<K extends keyof PromptFormState>(key: K, value: PromptFormState[K]) {
+    if (typeof key === "string" && key.startsWith("anonymous") && key !== "anonymousFramingEnabled") {
+      setAnonymousOptionsTouched(true);
+    }
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -231,6 +279,9 @@ export function PromptStudio() {
     | "anonymousHandDetails";
 
   function toggleChipField(key: ChipField, value: string) {
+    if (key === "anonymousFramingType" || key === "anonymousFocusObject" || key === "anonymousHandDetails") {
+      setAnonymousOptionsTouched(true);
+    }
     setForm((prev) => ({
       ...prev,
       [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value],
@@ -252,6 +303,7 @@ export function PromptStudio() {
   }
 
   function applyAnonymousFramingPreset(preset: AnonymousFramingPreset) {
+    setAnonymousOptionsTouched(true);
     setForm((prev) => ({
       ...prev,
       anonymousFramingEnabled: true,
@@ -279,7 +331,11 @@ export function PromptStudio() {
   }
 
   function resyncPromptFromFields() {
-    setPrompt(buildPromptForProvider(form, allLibraryModules, selectedCharacter));
+    setPrompt(
+      form.anonymousFramingEnabled && !anonymousOptionsTouched
+        ? ""
+        : buildPromptForProvider(form, allLibraryModules, selectedCharacter)
+    );
     setNegativePrompt(buildNegativePrompt(form));
     setPromptTouched(false);
   }
@@ -329,24 +385,6 @@ export function PromptStudio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAutoGenerate]);
 
-  function applyTemplate(formSnapshot: PromptFormState) {
-    setForm(formSnapshot);
-    const templateCharacter = characters.find((c) => c.id === formSnapshot.selectedCharacterId) ?? undefined;
-    setPrompt(buildPromptForProvider(formSnapshot, allLibraryModules, templateCharacter));
-    setNegativePrompt(buildNegativePrompt(formSnapshot));
-    setPromptTouched(false);
-  }
-
-  function applyScenarioFavorite(scenarioModuleSelections: Record<string, string[]>) {
-    setForm((prev) => ({ ...prev, scenarioModuleSelections }));
-  }
-
-  function applyPromptFavorite(favPrompt: string, favNegativePrompt: string) {
-    setPrompt(favPrompt);
-    setNegativePrompt(favNegativePrompt);
-    setPromptTouched(true);
-  }
-
   return (
     <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 px-4 py-8 lg:grid-cols-[1fr_420px] lg:px-8">
       <div className="flex flex-col gap-5">
@@ -373,6 +411,12 @@ export function PromptStudio() {
               Personagens →
             </Link>
             <Link
+              href="/configurations"
+              className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
+            >
+              Minhas Configurações →
+            </Link>
+            <Link
               href="/admin"
               className="whitespace-nowrap rounded-lg border border-white/10 bg-neutral-900/70 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-white/25"
             >
@@ -381,14 +425,25 @@ export function PromptStudio() {
           </div>
         </header>
 
-        <SavedItemsPanel
-          currentForm={form}
-          currentPrompt={prompt}
-          currentNegativePrompt={negativePrompt}
-          onApplyTemplate={applyTemplate}
-          onApplyScenarioFavorite={applyScenarioFavorite}
-          onApplyPromptFavorite={applyPromptFavorite}
-        />
+        <Section
+          title="Configuração"
+          description="Salve manualmente tudo o que você montou no Prompt Studio — personagem, roupas, cenário, pose, enquadramento, iluminação, câmera, estilo, prompt e IA usada — para reaplicar depois com 1 clique."
+        >
+          <div className="col-span-full flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowSaveConfiguration(true)}
+              className="rounded-lg bg-gradient-to-r from-fuchsia-500 to-violet-500 px-3 py-1.5 text-xs font-semibold text-white"
+            >
+              💾 Salvar configuração completa
+            </button>
+            {loadedConfiguration && (
+              <span className="text-xs text-neutral-500">
+                Carregado de: <strong className="text-neutral-300">{loadedConfiguration.name}</strong>
+              </span>
+            )}
+          </div>
+        </Section>
 
         <Section title="Modelo de IA">
           <Field label="Provedor / modelo" full>
@@ -578,6 +633,7 @@ export function PromptStudio() {
                 checked={form.anonymousFramingEnabled}
                 onChange={(e) => {
                   update("anonymousFramingEnabled", e.target.checked);
+                  setAnonymousOptionsTouched(false);
                   if (e.target.checked) setAnonymousFramingOpen(true);
                 }}
               />
@@ -736,6 +792,11 @@ export function PromptStudio() {
             <TextArea
               rows={8}
               value={prompt}
+              placeholder={
+                form.anonymousFramingEnabled && !anonymousOptionsTouched
+                  ? "Enquadramento Anônimo ativo — selecione as opções do módulo (parte visível, objeto, ambiente...) para gerar o prompt."
+                  : undefined
+              }
               onChange={(v) => {
                 setPrompt(v);
                 setPromptTouched(true);
@@ -903,6 +964,31 @@ export function PromptStudio() {
           </Section>
         )}
       </aside>
+
+      {showSaveConfiguration && (
+        <SaveConfigurationModal
+          form={form}
+          prompt={prompt}
+          negativePrompt={negativePrompt}
+          providerId={selectedProviderId ?? null}
+          providerName={selectedProvider?.name ?? null}
+          modelId={selectedModelId ?? null}
+          modelLabel={selectedProvider?.models.find((m) => m.id === selectedModelId)?.label ?? null}
+          existing={loadedConfiguration}
+          onClose={() => setShowSaveConfiguration(false)}
+          onSaved={(saved) => {
+            setLoadedConfiguration({
+              id: saved.id,
+              name: saved.name,
+              type: saved.type,
+              description: saved.description,
+              coverImageUrl: saved.coverImageUrl,
+              tags: saved.tags,
+            });
+            setShowSaveConfiguration(false);
+          }}
+        />
+      )}
     </div>
   );
 }

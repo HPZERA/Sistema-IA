@@ -13,6 +13,14 @@ export async function uploadCharacterImage(
   return { url: blob.url, fileName: file.name, fileType: file.type || "application/octet-stream" };
 }
 
+export async function uploadConfigurationCover(
+  file: File
+): Promise<{ url: string; fileName: string; fileType: string }> {
+  const pathname = `configurations/${Date.now()}-${file.name}`;
+  const blob = await put(pathname, file, { access: "public" });
+  return { url: blob.url, fileName: file.name, fileType: file.type || "application/octet-stream" };
+}
+
 export async function deleteBlob(url: string): Promise<void> {
   await del(url);
 }
